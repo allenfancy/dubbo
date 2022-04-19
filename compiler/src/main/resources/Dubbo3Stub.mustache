@@ -1,0 +1,16 @@
+{{#packageName}}
+    package {{packageName}};
+{{/packageName}}
+
+{{#deprecated}}
+    @java.lang.Deprecated
+{{/deprecated}}
+public final class {{className}} {
+
+public static boolean init() {
+    return true;
+}
+
+private {{className}}() {}
+
+}
