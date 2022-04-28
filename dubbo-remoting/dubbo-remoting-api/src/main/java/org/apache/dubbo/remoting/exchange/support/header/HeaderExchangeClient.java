@@ -36,26 +36,44 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.dubbo.remoting.Constants.HEARTBEAT_CHECK_TICK;
-import static org.apache.dubbo.remoting.Constants.LEAST_HEARTBEAT_DURATION;
-import static org.apache.dubbo.remoting.Constants.TICKS_PER_WHEEL;
+import static org.apache.dubbo.remoting.Constants.*;
 import static org.apache.dubbo.remoting.utils.UrlUtils.getHeartbeat;
 import static org.apache.dubbo.remoting.utils.UrlUtils.getIdleTimeout;
 
 /**
  * DefaultMessageClient
+ * 侧重定时轮资源的分配、定时任务的创建和取消.
+ *
+ * @author allen.wu
  */
 public class HeaderExchangeClient implements ExchangeClient {
 
+    /**
+     * 被修饰的 Client 对象
+     */
     private final Client client;
+
+    /**
+     * Client与服务端建立的连接
+     */
     private final ExchangeChannel channel;
 
+    /**
+     * client端空闲连接检测timer
+     */
     public static GlobalResourceInitializer<HashedWheelTimer> IDLE_CHECK_TIMER = new GlobalResourceInitializer<>(() ->
-        new HashedWheelTimer(new NamedThreadFactory("dubbo-client-idleCheck", true), 1,
-            TimeUnit.SECONDS, TICKS_PER_WHEEL),
-        HashedWheelTimer::stop);
+            new HashedWheelTimer(new NamedThreadFactory("dubbo-client-idleCheck", true), 1,
+                    TimeUnit.SECONDS, TICKS_PER_WHEEL),
+            HashedWheelTimer::stop);
 
+    /**
+     * 重连timer
+     */
     private Timeout reconnectTimer;
+
+    /**
+     * 心跳timer
+     */
     private Timeout heartBeatTimer;
 
     public HeaderExchangeClient(Client client, boolean startTimer) {
@@ -144,8 +162,11 @@ public class HeaderExchangeClient implements ExchangeClient {
     @Override
     public void close(int timeout) {
         // Mark the client into the closure process
+        // 1. 将closing字段设置为true
         startClose();
+        // 2. 关闭心跳定时任务和重连定时任务
         doClose();
+        // 3. 关闭HeaderExchangeChannel
         channel.close(timeout);
     }
 
@@ -193,9 +214,12 @@ public class HeaderExchangeClient implements ExchangeClient {
 
     private void startHeartBeatTask(URL url) {
         if (!client.canHandleIdle()) {
+            // 1. timer
             AbstractTimerTask.ChannelProvider cp = () -> Collections.singletonList(HeaderExchangeClient.this);
+            // 2. 计算心跳间隔，最小间隔不能低于1s
             int heartbeat = getHeartbeat(url);
             long heartbeatTick = calculateLeastDuration(heartbeat);
+            // 3. 创建心跳任务
             HeartbeatTimerTask heartBeatTimerTask = new HeartbeatTimerTask(cp, heartbeatTick, heartbeat);
             heartBeatTimer = IDLE_CHECK_TIMER.get().newTimeout(heartBeatTimerTask, heartbeatTick, TimeUnit.MILLISECONDS);
         }
@@ -233,7 +257,14 @@ public class HeaderExchangeClient implements ExchangeClient {
         }
     }
 
+    /**
+     * 判断是否应该重连；默认为true
+     *
+     * @param url url
+     * @return 是否应该重连
+     */
     private boolean shouldReconnect(URL url) {
+        // reconnect字段
         return url.getParameter(Constants.RECONNECT_KEY, true);
     }
 

@@ -23,10 +23,12 @@ import org.apache.dubbo.common.extension.SPI;
 
 /**
  * Transporter. (SPI, Singleton, ThreadSafe)
+ * 传输层接口，提供给客户端使用，客户端通过该接口来连接远程服务器。
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Transport_Layer">Transport Layer</a>
  * <a href="http://en.wikipedia.org/wiki/Client%E2%80%93server_model">Client/Server</a>
  *
+ * @author allen.wu
  * @see org.apache.dubbo.remoting.Transporters
  */
 @SPI(value = "netty", scope = ExtensionScope.FRAMEWORK)
@@ -34,11 +36,12 @@ public interface Transporter {
 
     /**
      * Bind a server.
+     * 创建一个服务端，并绑定到指定的端口上。
      *
      * @param url     server url
-     * @param handler
-     * @return server
-     * @throws RemotingException
+     * @param handler handler
+     * @return server server
+     * @throws RemotingException remoting exception
      * @see org.apache.dubbo.remoting.Transporters#bind(URL, ChannelHandler...)
      */
     @Adaptive({Constants.SERVER_KEY, Constants.TRANSPORTER_KEY})
@@ -46,11 +49,12 @@ public interface Transporter {
 
     /**
      * Connect to a server.
+     * 创建一个客户端，并连接到指定的服务端。
      *
      * @param url     server url
-     * @param handler
+     * @param handler handler
      * @return client
-     * @throws RemotingException
+     * @throws RemotingException remoting exception
      * @see org.apache.dubbo.remoting.Transporters#connect(URL, ChannelHandler...)
      */
     @Adaptive({Constants.CLIENT_KEY, Constants.TRANSPORTER_KEY})

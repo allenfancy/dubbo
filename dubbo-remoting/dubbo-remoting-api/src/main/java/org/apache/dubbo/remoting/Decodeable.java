@@ -17,8 +17,18 @@
 
 package org.apache.dubbo.remoting;
 
+/**
+ * 解码
+ *
+ * @author allen.wu
+ */
 public interface Decodeable {
 
+    /**
+     * 解码
+     *
+     * @throws Exception Exception
+     */
     void decode() throws Exception;
 
 }

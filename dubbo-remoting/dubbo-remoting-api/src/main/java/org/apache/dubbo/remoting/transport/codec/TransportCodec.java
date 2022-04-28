@@ -33,6 +33,8 @@ import java.io.OutputStream;
 /**
  * Subclasses {@link org.apache.dubbo.remoting.telnet.codec.TelnetCodec} and {@link org.apache.dubbo.remoting.exchange.codec.ExchangeCodec}
  * both override all the methods declared in this class.
+ * TransportCodec is the base class for all the transport codecs.
+ * @author qian.lei
  */
 @Deprecated
 public class TransportCodec extends AbstractCodec {

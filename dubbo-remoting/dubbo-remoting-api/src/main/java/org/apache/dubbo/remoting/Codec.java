@@ -26,6 +26,9 @@ import java.io.OutputStream;
 
 /**
  * Codec. (SPI, Singleton, ThreadSafe)
+ * 旧版本 codec
+ *
+ * @author allen.wu
  */
 @Deprecated
 @SPI(scope = ExtensionScope.FRAMEWORK)
@@ -44,6 +47,7 @@ public interface Codec {
      * @param channel channel.
      * @param output  output stream.
      * @param message message.
+     * @throws IOException io exception
      */
     @Adaptive({Constants.CODEC_KEY})
     void encode(Channel channel, OutputStream output, Object message) throws IOException;
@@ -54,6 +58,7 @@ public interface Codec {
      * @param channel channel.
      * @param input   input stream.
      * @return message or <code>NEED_MORE_INPUT</code> poison.
+     * @throws IOException io exception
      * @see #NEED_MORE_INPUT
      */
     @Adaptive({Constants.CODEC_KEY})

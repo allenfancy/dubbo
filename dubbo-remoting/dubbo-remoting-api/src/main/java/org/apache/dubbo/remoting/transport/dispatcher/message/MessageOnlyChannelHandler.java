@@ -29,6 +29,11 @@ import org.apache.dubbo.remoting.transport.dispatcher.WrappedChannelHandler;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 
+/**
+ * 由MessageOnlyDispatcher创建:
+ *  会将所有收到的消息提交到线程池处理，其他网络事件则是由IO线程直接处理。
+ * @author allen.wu
+ */
 public class MessageOnlyChannelHandler extends WrappedChannelHandler {
 
     public MessageOnlyChannelHandler(ChannelHandler handler, URL url) {
@@ -41,7 +46,7 @@ public class MessageOnlyChannelHandler extends WrappedChannelHandler {
         try {
             executor.execute(new ChannelEventRunnable(channel, handler, ChannelState.RECEIVED, message));
         } catch (Throwable t) {
-            if(message instanceof Request && t instanceof RejectedExecutionException){
+            if (message instanceof Request && t instanceof RejectedExecutionException) {
                 sendFeedback(channel, (Request) message, t);
                 return;
             }

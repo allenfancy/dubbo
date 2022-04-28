@@ -85,6 +85,7 @@ public class PerformanceServerTest  {
                 return "echo: " + message + "\r\ntelnet> ";
             }
 
+            @Override
             public CompletableFuture<Object> reply(ExchangeChannel channel, Object request) throws RemotingException {
                 if ("environment".equals(request)) {
                     return CompletableFuture.completedFuture(PerformanceUtils.getEnvironment());

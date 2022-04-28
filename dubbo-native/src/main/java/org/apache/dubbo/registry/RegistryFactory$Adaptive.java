@@ -18,6 +18,7 @@ package org.apache.dubbo.registry;
 import org.apache.dubbo.rpc.model.ScopeModel;
 import org.apache.dubbo.rpc.model.ScopeModelUtil;
 public class RegistryFactory$Adaptive implements org.apache.dubbo.registry.RegistryFactory {
+@Override
 public org.apache.dubbo.registry.Registry getRegistry(org.apache.dubbo.common.URL arg0)  {
 if (arg0 == null) throw new IllegalArgumentException("url == null");
 org.apache.dubbo.common.URL url = arg0;

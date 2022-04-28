@@ -23,16 +23,7 @@ import org.apache.dubbo.remoting.Constants;
 import org.apache.dubbo.remoting.RemotingException;
 import org.apache.dubbo.remoting.TimeoutException;
 import org.apache.dubbo.remoting.exchange.ExchangeClient;
-import org.apache.dubbo.rpc.AppResponse;
-import org.apache.dubbo.rpc.AsyncRpcResult;
-import org.apache.dubbo.rpc.FutureContext;
-import org.apache.dubbo.rpc.Invocation;
-import org.apache.dubbo.rpc.Invoker;
-import org.apache.dubbo.rpc.Result;
-import org.apache.dubbo.rpc.RpcContext;
-import org.apache.dubbo.rpc.RpcException;
-import org.apache.dubbo.rpc.RpcInvocation;
-import org.apache.dubbo.rpc.TimeoutCountDown;
+import org.apache.dubbo.rpc.*;
 import org.apache.dubbo.rpc.protocol.AbstractInvoker;
 import org.apache.dubbo.rpc.support.RpcUtils;
 
@@ -42,33 +33,46 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_TIMEOUT;
-import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_VERSION;
-import static org.apache.dubbo.common.constants.CommonConstants.ENABLE_TIMEOUT_COUNTDOWN_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.PATH_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_ATTACHMENT_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.TIME_COUNTDOWN_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.*;
 import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 
 /**
  * DubboInvoker
+ * protocolBindingRefer() 方法会根据调用的业务接口类型以及 URL创建底层的 ExchangeClient 集合
+ * ，然后封装成 DubboInvoker 对象返回。DubboInvoker 是 AbstractInvoker 的实现类
+ *
+ * @author allen.wu
  */
 public class DubboInvoker<T> extends AbstractInvoker<T> {
 
+    /**
+     * clients.
+     */
     private final ExchangeClient[] clients;
 
+    /**
+     * 下标
+     */
     private final AtomicPositiveInteger index = new AtomicPositiveInteger();
 
+    /**
+     * 版本
+     */
     private final String version;
 
+    /**
+     * 可冲如梭
+     */
     private final ReentrantLock destroyLock = new ReentrantLock();
 
+    /**
+     * invoker集合
+     */
     private final Set<Invoker<?>> invokers;
 
+    /**
+     * 服务关闭超时时间
+     */
     private final int serverShutdownTimeout;
 
     public DubboInvoker(Class<T> serviceType, URL url, ExchangeClient[] clients) {
@@ -86,35 +90,47 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
 
     @Override
     protected Result doInvoke(final Invocation invocation) throws Throwable {
+        // 1. 转为RcpInvocation
         RpcInvocation inv = (RpcInvocation) invocation;
+        // 2. 获取methodName
         final String methodName = RpcUtils.getMethodName(invocation);
+        // 3. 设置path和version
         inv.setAttachment(PATH_KEY, getUrl().getPath());
         inv.setAttachment(VERSION_KEY, version);
 
+        // 4. 获取ExchangeClient
         ExchangeClient currentClient;
         if (clients.length == 1) {
+            // 4.1 如果clients只有一个，直接使用
             currentClient = clients[0];
         } else {
+            // 4.2 如果clients长度大于1，则
             currentClient = clients[index.getAndIncrement() % clients.length];
         }
         try {
+            // 5. isOneway
             boolean isOneway = RpcUtils.isOneway(getUrl(), invocation);
+            // 6. 根据调用的方法名称和配置计算此次调用的超时时间
             int timeout = calculateTimeout(invocation, methodName);
             invocation.setAttachment(TIMEOUT_KEY, timeout);
+            // 7. 如果是oneWay，不需要关心返回值
             if (isOneway) {
                 boolean isSent = getUrl().getMethodParameter(methodName, Constants.SENT_KEY, false);
+                // send方法
                 currentClient.send(inv, isSent);
                 return AsyncRpcResult.newDefaultAsyncResult(invocation);
-            } else {
-                ExecutorService executor = getCallbackExecutor(getUrl(), inv);
-                CompletableFuture<AppResponse> appResponseFuture =
-                        currentClient.request(inv, timeout, executor).thenApply(obj -> (AppResponse) obj);
-                // save for 2.6.x compatibility, for example, TraceFilter in Zipkin uses com.alibaba.xxx.FutureAdapter
-                FutureContext.getContext().setCompatibleFuture(appResponseFuture);
-                AsyncRpcResult result = new AsyncRpcResult(appResponseFuture, inv);
-                result.setExecutor(executor);
-                return result;
             }
+            // 8. 需要关心返回值
+            ExecutorService executor = getCallbackExecutor(getUrl(), inv);
+            // 调用的request方法
+            CompletableFuture<AppResponse> appResponseFuture =
+                    currentClient.request(inv, timeout, executor).thenApply(obj -> (AppResponse) obj);
+            // save for 2.6.x compatibility, for example, TraceFilter in Zipkin uses com.alibaba.xxx.FutureAdapter
+            FutureContext.getContext().setCompatibleFuture(appResponseFuture);
+            // AppResponse封装成AsyncRpcResult返回
+            AsyncRpcResult result = new AsyncRpcResult(appResponseFuture, inv);
+            result.setExecutor(executor);
+            return result;
         } catch (TimeoutException e) {
             throw new RpcException(RpcException.TIMEOUT_EXCEPTION, "Invoke remote method timeout. method: " + invocation.getMethodName() + ", provider: " + getUrl() + ", cause: " + e.getMessage(), e);
         } catch (RemotingException e) {

@@ -19,6 +19,8 @@ package org.apache.dubbo.common.threadlocal;
 
 /**
  * InternalThread
+ * 核心：setThreadLocalMap() 和 threadLocalMap() 两个方法
+ * @author allen.wu
  */
 public class InternalThread extends Thread {
 

@@ -48,6 +48,9 @@ import static org.apache.dubbo.common.utils.ReflectUtils.defaultReturn;
  * AsyncRpcResult does not contain any concrete value (except the underlying value bring by CompletableFuture), consider it as a status transfer node.
  * {@link #getValue()} and {@link #getException()} are all inherited from {@link Result} interface, implementing them are mainly
  * for compatibility consideration. Because many legacy {@link Filter} implementation are most possibly to call getValue directly.
+ *
+ * 它表示的是一个异步的、未完成的 RPC 调用，其中会记录对应 RPC 调用的信息（例如，关联的 RpcContext 和 Invocation 对象）
+ * @author allen.wu
  */
 public class AsyncRpcResult implements Result {
     private static final Logger logger = LoggerFactory.getLogger(AsyncRpcResult.class);
@@ -55,14 +58,27 @@ public class AsyncRpcResult implements Result {
     /**
      * RpcContext may already have been changed when callback happens, it happens when the same thread is used to execute another RPC call.
      * So we should keep the copy of current RpcContext instance and restore it before callback being executed.
+     * 用于存储相关的 RpcContext 对象。我们知道 RpcContext 是与线程绑定的，
+     * 而真正执行 AsyncRpcResult 上添加的回调方法的线程可能先后处理过多个不同的 AsyncRpcResult，
+     * 所以我们需要传递并保存当前的 RpcContext。
      */
     private RpcContext.RestoreContext storedContext;
 
+    /**
+     * 此次 RPC 调用关联的线程池
+     */
     private Executor executor;
 
+    /**
+     * 此次 RPC 调用关联的 Invocation 对象
+     */
     private Invocation invocation;
+
     private final boolean async;
 
+    /**
+     * 这个 responseFuture 字段与前文提到的 DefaultFuture 有紧密的联系，是 DefaultFuture 回调链上的一个 Future
+     */
     private CompletableFuture<AppResponse> responseFuture;
 
     /**
@@ -197,14 +213,16 @@ public class AsyncRpcResult implements Result {
 
     @Override
     public Object recreate() throws Throwable {
+        //1. 如果是RpcInvocation时，判断是否是模式
         RpcInvocation rpcInvocation = (RpcInvocation) invocation;
         if (InvokeMode.FUTURE == rpcInvocation.getInvokeMode()) {
             return RpcContext.getClientAttachment().getFuture();
         }
-
+        //2. 不是FUTURE模式进行recreate
         return getAppResponse().recreate();
     }
 
+    @Override
     public Result whenCompleteWithContext(BiConsumer<Result, Throwable> fn) {
         this.responseFuture = this.responseFuture.whenComplete((v, t) -> {
             if (async) {

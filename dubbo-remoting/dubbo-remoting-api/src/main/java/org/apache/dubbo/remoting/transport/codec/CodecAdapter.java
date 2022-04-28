@@ -27,9 +27,14 @@ import org.apache.dubbo.remoting.buffer.ChannelBuffer;
 
 import java.io.IOException;
 
+/**
+ * Codec适配器；用于适配Codec和Codec2的转换
+ *
+ * @author allen.wu
+ */
 public class CodecAdapter implements Codec2 {
 
-    private Codec codec;
+    private final Codec codec;
 
     public CodecAdapter(Codec codec) {
         Assert.notNull(codec, "codec == null");

@@ -20,23 +20,28 @@ import org.apache.dubbo.common.extension.SPI;
 
 /**
  * InvokerListener. (SPI, Singleton, ThreadSafe)
+ * 监听Consumer引用服务时触发的事件
+ *
+ * @author allen.wu
  */
 @SPI
 public interface InvokerListener {
 
     /**
      * The invoker referred
+     * 当服务引用的时候，会触发该方法
      *
-     * @param invoker
-     * @throws RpcException
+     * @param invoker invoker
+     * @throws RpcException rpc exception
      * @see org.apache.dubbo.rpc.Protocol#refer(Class, org.apache.dubbo.common.URL)
      */
     void referred(Invoker<?> invoker) throws RpcException;
 
     /**
      * The invoker destroyed.
+     * 当销毁引用的服务时，会触发该方法
      *
-     * @param invoker
+     * @param invoker invoker
      * @see org.apache.dubbo.rpc.Invoker#destroy()
      */
     void destroyed(Invoker<?> invoker);

@@ -16,8 +16,24 @@
  */
 package org.apache.dubbo.rpc;
 
+/**
+ * invoke mode
+ *
+ * @author allen.wu
+ */
 public enum InvokeMode {
 
-    SYNC, ASYNC, FUTURE;
+    /**
+     * sync invoke
+     */
+    SYNC,
+    /**
+     * async invoke
+     */
+    ASYNC,
+    /**
+     * future invoke
+     */
+    FUTURE;
 
 }

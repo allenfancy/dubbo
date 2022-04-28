@@ -25,6 +25,9 @@ import java.net.InetSocketAddress;
 
 /**
  * ChannelDelegate
+ * Channel delegate is used to delegate the channel to the channel handler.
+ *
+ * @author allen.wu
  */
 public class ChannelDelegate implements Channel {
 

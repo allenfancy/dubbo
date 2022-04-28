@@ -27,17 +27,25 @@ import java.lang.reflect.Proxy;
 
 /**
  * JdkRpcProxyFactory
+ * JDK dynamic proxy，用于根据Invoker 创建代理对象
+ *
+ * @author allen.wu
  */
 public class JdkProxyFactory extends AbstractProxyFactory {
 
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getProxy(Invoker<T> invoker, Class<?>[] interfaces) {
+        // 通过Proxy.newProxyInstance创建代理对象
         return (T) Proxy.newProxyInstance(invoker.getInterface().getClassLoader(), interfaces, new InvokerInvocationHandler(invoker));
     }
 
     @Override
     public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) {
+
+        /*
+         * 创建Invoker
+         */
         return new AbstractProxyInvoker<T>(proxy, type, url) {
             @Override
             protected Object doInvoke(T proxy, String methodName,

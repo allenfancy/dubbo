@@ -38,16 +38,28 @@ public interface ExecutorRepository {
      */
     ExecutorService createExecutorIfAbsent(URL url);
 
+    /**
+     * 根据URL获取ExecutorService
+     *
+     * @param url url
+     * @return ExecutorService
+     */
     ExecutorService getExecutor(URL url);
 
     /**
      * Modify some of the threadpool's properties according to the url, for example, coreSize, maxSize, ...
+     * 通过URL修改线程池的属性，例如核心线程数、最大线程数等
      *
-     * @param url
-     * @param executor
+     * @param url      url
+     * @param executor executor
      */
     void updateThreadpool(URL url, ExecutorService executor);
 
+    /**
+     * 获取线程池管理器
+     *
+     * @return ScheduledExecutorService
+     */
     ScheduledExecutorService getServiceExportExecutor();
 
     /**
@@ -56,6 +68,11 @@ public interface ExecutorRepository {
      */
     void shutdownServiceExportExecutor();
 
+    /**
+     * 获取线程池refer管理器
+     *
+     * @return ExecutorService
+     */
     ExecutorService getServiceReferExecutor();
 
     /**
@@ -73,29 +90,35 @@ public interface ExecutorRepository {
      * Returns a scheduler from the scheduler list, call this method whenever you need a scheduler for a cron job.
      * If your cron cannot burden the possible schedule delay caused by sharing the same scheduler, please consider define a dedicate one.
      *
-     * @deprecated use {@link FrameworkExecutorRepository#nextScheduledExecutor()} instead
      * @return ScheduledExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#nextScheduledExecutor()} instead
      */
     @Deprecated
     ScheduledExecutorService nextScheduledExecutor();
 
     /**
-     * @deprecated use {@link FrameworkExecutorRepository#nextExecutorExecutor()} instead
+     * 下一个线程池
+     *
      * @return ExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#nextExecutorExecutor()} instead
      */
     @Deprecated
     ExecutorService nextExecutorExecutor();
 
     /**
-     * @deprecated use {@link FrameworkExecutorRepository#getServiceDiscoveryAddressNotificationExecutor()} instead
+     * 下一个线程池
+     *
      * @return ScheduledExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getServiceDiscoveryAddressNotificationExecutor()} instead
      */
     @Deprecated
     ScheduledExecutorService getServiceDiscoveryAddressNotificationExecutor();
 
     /**
-     * @deprecated use {@link FrameworkExecutorRepository#getMetadataRetryExecutor()} instead
+     * 获取meta data retry executor
+     *
      * @return ScheduledExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getMetadataRetryExecutor()} instead
      */
     @Deprecated
     ScheduledExecutorService getMetadataRetryExecutor();
@@ -103,8 +126,8 @@ public interface ExecutorRepository {
     /**
      * Scheduled executor handle registry notification.
      *
-     * @deprecated use {@link FrameworkExecutorRepository#getRegistryNotificationExecutor()} instead
      * @return ScheduledExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getRegistryNotificationExecutor()} instead
      */
     @Deprecated
     ScheduledExecutorService getRegistryNotificationExecutor();
@@ -112,8 +135,8 @@ public interface ExecutorRepository {
     /**
      * Get the default shared threadpool.
      *
-     * @deprecated use {@link FrameworkExecutorRepository#getSharedExecutor()} instead
      * @return ScheduledExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getSharedExecutor()} instead
      */
     @Deprecated
     ExecutorService getSharedExecutor();
@@ -121,15 +144,15 @@ public interface ExecutorRepository {
     /**
      * Get the shared schedule executor
      *
-     * @deprecated use {@link FrameworkExecutorRepository#getSharedScheduledExecutor()} instead
      * @return ScheduledExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getSharedScheduledExecutor()} instead
      */
     @Deprecated
     ScheduledExecutorService getSharedScheduledExecutor();
 
     /**
-     * @deprecated use {@link FrameworkExecutorRepository#getPoolRouterExecutor()} instead
      * @return ExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getPoolRouterExecutor()} instead
      */
     @Deprecated
     ExecutorService getPoolRouterExecutor();
@@ -137,8 +160,8 @@ public interface ExecutorRepository {
     /**
      * Scheduled executor handle connectivity check task
      *
-     * @deprecated use {@link FrameworkExecutorRepository#getConnectivityScheduledExecutor()} instead
      * @return ScheduledExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getConnectivityScheduledExecutor()} instead
      */
     @Deprecated
     ScheduledExecutorService getConnectivityScheduledExecutor();
@@ -146,8 +169,8 @@ public interface ExecutorRepository {
     /**
      * Scheduler used to refresh file based caches from memory to disk.
      *
-     * @deprecated use {@link FrameworkExecutorRepository#getCacheRefreshingScheduledExecutor()} instead
      * @return ScheduledExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getCacheRefreshingScheduledExecutor()} instead
      */
     @Deprecated
     ScheduledExecutorService getCacheRefreshingScheduledExecutor();
@@ -155,8 +178,8 @@ public interface ExecutorRepository {
     /**
      * Executor used to run async mapping tasks
      *
-     * @deprecated use {@link FrameworkExecutorRepository#getMappingRefreshingExecutor()} instead
      * @return ExecutorService
+     * @deprecated use {@link FrameworkExecutorRepository#getMappingRefreshingExecutor()} instead
      */
     @Deprecated
     ExecutorService getMappingRefreshingExecutor();

@@ -24,19 +24,20 @@ import org.apache.dubbo.remoting.transport.dispatcher.all.AllDispatcher;
 
 /**
  * ChannelHandlerWrapper (SPI, Singleton, ThreadSafe)
+ *
+ * @author allen.wu
  */
 @SPI(value = AllDispatcher.NAME, scope = ExtensionScope.FRAMEWORK)
 public interface Dispatcher {
 
     /**
      * dispatch the message to threadpool.
-     *
-     * @param handler
-     * @param url
+     * 通过URL中的参数可以指定扩展名，覆盖默认扩展名
+     * @param handler handler
+     * @param url url
      * @return channel handler
      */
     @Adaptive({Constants.DISPATCHER_KEY, "dispather", "channel.handler"})
-    // The last two parameters are reserved for compatibility with the old configuration
     ChannelHandler dispatch(ChannelHandler handler, URL url);
 
 }

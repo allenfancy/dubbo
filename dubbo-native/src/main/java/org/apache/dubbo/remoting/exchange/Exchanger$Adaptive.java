@@ -18,6 +18,7 @@ package org.apache.dubbo.remoting.exchange;
 import org.apache.dubbo.rpc.model.ScopeModel;
 import org.apache.dubbo.rpc.model.ScopeModelUtil;
 public class Exchanger$Adaptive implements org.apache.dubbo.remoting.exchange.Exchanger {
+@Override
 public org.apache.dubbo.remoting.exchange.ExchangeClient connect(org.apache.dubbo.common.URL arg0, org.apache.dubbo.remoting.exchange.ExchangeHandler arg1) throws org.apache.dubbo.remoting.RemotingException {
 if (arg0 == null) throw new IllegalArgumentException("url == null");
 org.apache.dubbo.common.URL url = arg0;
@@ -27,6 +28,7 @@ ScopeModel scopeModel = ScopeModelUtil.getOrDefault(url.getScopeModel(), org.apa
 org.apache.dubbo.remoting.exchange.Exchanger extension = (org.apache.dubbo.remoting.exchange.Exchanger)scopeModel.getExtensionLoader(org.apache.dubbo.remoting.exchange.Exchanger.class).getExtension(extName);
 return extension.connect(arg0, arg1);
 }
+@Override
 public org.apache.dubbo.remoting.exchange.ExchangeServer bind(org.apache.dubbo.common.URL arg0, org.apache.dubbo.remoting.exchange.ExchangeHandler arg1) throws org.apache.dubbo.remoting.RemotingException {
 if (arg0 == null) throw new IllegalArgumentException("url == null");
 org.apache.dubbo.common.URL url = arg0;

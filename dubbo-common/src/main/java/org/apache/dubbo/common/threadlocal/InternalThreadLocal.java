@@ -30,11 +30,18 @@ import java.util.Set;
  * table, and it is useful when accessed frequently.
  * <p></p>
  * This design is learning from {@see io.netty.util.concurrent.FastThreadLocal} which is in Netty.
+ * 与ThreadLocal类似；
+ * 只是底层实现略有不同，其底层的 InternalThreadLocalMap 采用数组结构存储数据，直接通过 index 获取变量，相较于 Map 方式计算 hash 值的性能更好
+ *
+ * @author allen.wu
  */
 public class InternalThreadLocal<V> extends ThreadLocal<V> {
 
     private static final int VARIABLES_TO_REMOVE_INDEX = InternalThreadLocalMap.nextVariableIndex();
 
+    /**
+     * 下标
+     */
     private final int index;
 
     public InternalThreadLocal() {
@@ -117,12 +124,13 @@ public class InternalThreadLocal<V> extends ThreadLocal<V> {
     @SuppressWarnings("unchecked")
     @Override
     public final V get() {
+        // 1. 获取 InternalThreadLocalMap
         InternalThreadLocalMap threadLocalMap = InternalThreadLocalMap.get();
         Object v = threadLocalMap.indexedVariable(index);
         if (v != InternalThreadLocalMap.UNSET) {
             return (V) v;
         }
-
+        // 2. 如果为UNSET对象，初始化
         return initialize(threadLocalMap);
     }
 
@@ -144,11 +152,15 @@ public class InternalThreadLocal<V> extends ThreadLocal<V> {
      */
     @Override
     public final void set(V value) {
+        // 1. 如果value为null或UNSET对象，清楚
         if (value == null || value == InternalThreadLocalMap.UNSET) {
             remove();
         } else {
+            // 2. 获取当前线程绑定的InternalThreadLocalMap
             InternalThreadLocalMap threadLocalMap = InternalThreadLocalMap.get();
+            // 3. 将value存储到InternalThreadLocalMap.indexedVariables集合中
             if (threadLocalMap.setIndexedVariable(index, value)) {
+                // 3.1 将当前InternalThreadLocal记录到待删除集合中
                 addToVariablesToRemove(threadLocalMap, this);
             }
         }

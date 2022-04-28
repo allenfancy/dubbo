@@ -23,7 +23,7 @@ import java.net.InetSocketAddress;
 /**
  * Endpoint. (API/SPI, Prototype, ThreadSafe)
  *
- *
+ * @author allen.wu
  * @see org.apache.dubbo.remoting.Channel
  * @see org.apache.dubbo.remoting.Client
  * @see RemotingServer
@@ -54,33 +54,43 @@ public interface Endpoint {
     /**
      * send message.
      *
-     * @param message
-     * @throws RemotingException
+     * @param message message
+     * @throws RemotingException remoting exception
      */
     void send(Object message) throws RemotingException;
 
     /**
      * send message.
+     * 发送消息
      *
-     * @param message
+     * @param message message
      * @param sent    already sent to socket?
+     * @throws RemotingException remoting exception
      */
     void send(Object message, boolean sent) throws RemotingException;
 
     /**
      * close the channel.
+     * 强制关闭channel
      */
     void close();
 
     /**
      * Graceful close the channel.
+     * 安静关闭channel
+     *
+     * @param timeout 超时时间
      */
     void close(int timeout);
 
+    /**
+     * 开始关闭channel
+     */
     void startClose();
 
     /**
      * is closed.
+     * 是否已关闭
      *
      * @return closed
      */

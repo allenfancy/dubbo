@@ -32,20 +32,9 @@ import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.model.ModuleModel;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
 
-import static org.apache.dubbo.common.constants.CommonConstants.CONSUMER_SIDE;
-import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_EXPORT_THREAD_NUM;
-import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_REFER_THREAD_NUM;
-import static org.apache.dubbo.common.constants.CommonConstants.EXECUTOR_SERVICE_COMPONENT_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.SIDE_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.THREADS_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.THREAD_NAME_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.*;
 
 /**
  * Consider implementing {@code Licycle} to enable executors shutdown when the process stops.
@@ -57,9 +46,14 @@ public class DefaultExecutorRepository implements ExecutorRepository, ExtensionA
 
     private volatile ExecutorService serviceReferExecutor;
 
+    /**
+     * 第一层 Key 值表示线程池属于 Provider 端还是 Consumer 端，
+     * 第二层 Key 值表示线程池关联服务的端口。
+     */
     private final ConcurrentMap<String, ConcurrentMap<Integer, ExecutorService>> data = new ConcurrentHashMap<>();
 
     private final Object LOCK = new Object();
+
     private ExtensionAccessor extensionAccessor;
 
     private final ApplicationModel applicationModel;
@@ -72,9 +66,10 @@ public class DefaultExecutorRepository implements ExecutorRepository, ExtensionA
 
     /**
      * Get called when the server or client instance initiating.
+     * 当server或者client端实例初始化时调用
      *
-     * @param url
-     * @return
+     * @param url url
+     * @return ExecutorService
      */
     @Override
     public synchronized ExecutorService createExecutorIfAbsent(URL url) {
@@ -101,6 +96,7 @@ public class DefaultExecutorRepository implements ExecutorRepository, ExtensionA
 
     @Override
     public ExecutorService getExecutor(URL url) {
+        //1. 从Cache中获取Map
         Map<Integer, ExecutorService> executors = data.get(EXECUTOR_SERVICE_COMPONENT_KEY);
 
         /*
@@ -109,7 +105,7 @@ public class DefaultExecutorRepository implements ExecutorRepository, ExtensionA
          */
         if (executors == null) {
             logger.warn("No available executors, this is not expected, framework should call createExecutorIfAbsent first " +
-                "before coming to here.");
+                    "before coming to here.");
             return null;
         }
 
@@ -133,7 +129,7 @@ public class DefaultExecutorRepository implements ExecutorRepository, ExtensionA
     public void updateThreadpool(URL url, ExecutorService executor) {
         try {
             if (url.hasParameter(THREADS_KEY)
-                && executor instanceof ThreadPoolExecutor && !executor.isShutdown()) {
+                    && executor instanceof ThreadPoolExecutor && !executor.isShutdown()) {
                 ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
                 int threads = url.getParameter(THREADS_KEY, 0);
                 int max = threadPoolExecutor.getMaximumPoolSize();
@@ -165,7 +161,7 @@ public class DefaultExecutorRepository implements ExecutorRepository, ExtensionA
                 String applicationName = applicationModel.tryGetApplicationName();
                 applicationName = StringUtils.isEmpty(applicationName) ? "app" : applicationName;
                 serviceExportExecutor = Executors.newScheduledThreadPool(coreSize,
-                    new NamedThreadFactory("Dubbo-" + applicationName + "-service-export", true));
+                        new NamedThreadFactory("Dubbo-" + applicationName + "-service-export", true));
             }
         }
         return serviceExportExecutor;
@@ -194,7 +190,7 @@ public class DefaultExecutorRepository implements ExecutorRepository, ExtensionA
                 String applicationName = applicationModel.tryGetApplicationName();
                 applicationName = StringUtils.isEmpty(applicationName) ? "app" : applicationName;
                 serviceReferExecutor = Executors.newFixedThreadPool(coreSize,
-                    new NamedThreadFactory("Dubbo-" + applicationName + "-service-refer", true));
+                        new NamedThreadFactory("Dubbo-" + applicationName + "-service-refer", true));
             }
         }
         return serviceReferExecutor;
@@ -238,10 +234,10 @@ public class DefaultExecutorRepository implements ExecutorRepository, ExtensionA
         Integer threadNum = moduleConfig.getExportThreadNum();
         if (threadNum == null) {
             threadNum = moduleModel.getConfigManager().getProviders()
-                .stream()
-                .map(ProviderConfig::getExportThreadNum)
-                .filter(k -> k != null && k > 0)
-                .findAny().orElse(null);
+                    .stream()
+                    .map(ProviderConfig::getExportThreadNum)
+                    .filter(k -> k != null && k > 0)
+                    .findAny().orElse(null);
         }
         return threadNum;
     }
@@ -270,10 +266,10 @@ public class DefaultExecutorRepository implements ExecutorRepository, ExtensionA
         Integer threadNum = moduleConfig.getReferThreadNum();
         if (threadNum == null) {
             threadNum = moduleModel.getConfigManager().getConsumers()
-                .stream()
-                .map(ConsumerConfig::getReferThreadNum)
-                .filter(k -> k != null && k > 0)
-                .findAny().orElse(null);
+                    .stream()
+                    .map(ConsumerConfig::getReferThreadNum)
+                    .filter(k -> k != null && k > 0)
+                    .findAny().orElse(null);
         }
         return threadNum;
     }

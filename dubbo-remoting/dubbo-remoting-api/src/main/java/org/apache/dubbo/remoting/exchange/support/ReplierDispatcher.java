@@ -25,6 +25,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * ReplierDispatcher
+ * replier dispatcher
+ *
+ * @author allen.wu
  */
 public class ReplierDispatcher implements Replier<Object> {
 

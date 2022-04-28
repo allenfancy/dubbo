@@ -18,7 +18,9 @@
 package org.apache.dubbo.rpc.protocol.dubbo;
 
 /**
+ * dubbo protocol constants
  *
+ * @author allen.wu
  */
 public interface Constants {
 

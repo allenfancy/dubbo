@@ -31,9 +31,17 @@ import java.util.Arrays;
 
 /**
  * JavassistRpcProxyFactory
+ * javassist proxy factory.
+ * 当出现问题时，会降级到jdk代理
+ *
+ * @author allen.wu
  */
 public class JavassistProxyFactory extends AbstractProxyFactory {
     private final static Logger logger = LoggerFactory.getLogger(JavassistProxyFactory.class);
+
+    /**
+     * jdk proxy factory
+     */
     private final JdkProxyFactory jdkProxyFactory = new JdkProxyFactory();
 
     @Override
@@ -46,13 +54,13 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
             try {
                 T proxy = jdkProxyFactory.getProxy(invoker, interfaces);
                 logger.error("Failed to generate proxy by Javassist failed. Fallback to use JDK proxy success. " +
-                    "Interfaces: " + Arrays.toString(interfaces), fromJavassist);
+                        "Interfaces: " + Arrays.toString(interfaces), fromJavassist);
                 return proxy;
             } catch (Throwable fromJdk) {
                 logger.error("Failed to generate proxy by Javassist failed. Fallback to use JDK proxy is also failed. " +
-                    "Interfaces: " + Arrays.toString(interfaces) + " Javassist Error.", fromJavassist);
+                        "Interfaces: " + Arrays.toString(interfaces) + " Javassist Error.", fromJavassist);
                 logger.error("Failed to generate proxy by Javassist failed. Fallback to use JDK proxy is also failed. " +
-                    "Interfaces: " + Arrays.toString(interfaces) + " JDK Error.", fromJdk);
+                        "Interfaces: " + Arrays.toString(interfaces) + " JDK Error.", fromJdk);
                 throw fromJavassist;
             }
         }
@@ -62,7 +70,9 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
     public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) {
         try {
             // TODO Wrapper cannot handle this scenario correctly: the classname contains '$'
+            // 1. 通过Wrapper创建一个包装类对象
             final Wrapper wrapper = Wrapper.getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
+            // 2. 创建一个实现了AbstractProxyInvoker的匿名内部类，其doInvoker()方法会直接委托给Wrapper对象的InvokeMethod()方法
             return new AbstractProxyInvoker<T>(proxy, type, url) {
                 @Override
                 protected Object doInvoke(T proxy, String methodName,
@@ -76,14 +86,14 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
             try {
                 Invoker<T> invoker = jdkProxyFactory.getInvoker(proxy, type, url);
                 logger.error("Failed to generate invoker by Javassist failed. Fallback to use JDK proxy success. " +
-                    "Interfaces: " + type, fromJavassist);
+                        "Interfaces: " + type, fromJavassist);
                 // log out error
                 return invoker;
             } catch (Throwable fromJdk) {
                 logger.error("Failed to generate invoker by Javassist failed. Fallback to use JDK proxy is also failed. " +
-                    "Interfaces: " + type + " Javassist Error.", fromJavassist);
+                        "Interfaces: " + type + " Javassist Error.", fromJavassist);
                 logger.error("Failed to generate invoker by Javassist failed. Fallback to use JDK proxy is also failed. " +
-                    "Interfaces: " + type + " JDK Error.", fromJdk);
+                        "Interfaces: " + type + " JDK Error.", fromJdk);
                 throw fromJavassist;
             }
         }

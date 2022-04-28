@@ -58,6 +58,7 @@ final class DeprecatedExchangeCodec extends DeprecatedTelnetCodec implements Cod
         return MAGIC;
     }
 
+    @Override
     public void encode(Channel channel, OutputStream os, Object msg) throws IOException {
         if (msg instanceof Request) {
             encodeRequest(channel, os, (Request) msg);
@@ -68,6 +69,7 @@ final class DeprecatedExchangeCodec extends DeprecatedTelnetCodec implements Cod
         }
     }
 
+    @Override
     public Object decode(Channel channel, InputStream is) throws IOException {
         int readable = is.available();
         byte[] header = new byte[Math.min(readable, HEADER_LENGTH)];

@@ -29,6 +29,9 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * ExchangeHandlerDispatcher
+ * exchange handler dispatcher
+ *
+ * @author allen.wu
  */
 public class ExchangeHandlerDispatcher implements ExchangeHandler {
 

@@ -28,7 +28,11 @@ import java.util.concurrent.Executors;
 
 /**
  * Global resources repository between all framework models.
+ * 所有框架模型之间的全局资源存储库。
  * It will be destroyed only after all framework model is destroyed.
+ * 只有在所有框架模型被销毁后，它才会被销毁。
+ *
+ * @author allen.wu
  */
 public class GlobalResourcesRepository {
 
@@ -37,7 +41,7 @@ public class GlobalResourcesRepository {
     private volatile static GlobalResourcesRepository instance;
     private volatile ExecutorService executorService;
     private final List<Disposable> oneoffDisposables = new CopyOnWriteArrayList<>();
-    private static final List<Disposable> globalReusedDisposables = new CopyOnWriteArrayList<>();
+    private static final List<Disposable> GLOBAL_REUSED_DISPOSABLES = new CopyOnWriteArrayList<>();
 
     private GlobalResourcesRepository() {
     }
@@ -56,19 +60,20 @@ public class GlobalResourcesRepository {
     /**
      * Register a global reused disposable. The disposable will be executed when all dubbo FrameworkModels are destroyed.
      * Note: the global disposable should be registered in static code, it's reusable and will not be removed when dubbo shutdown.
+     *
      * @param disposable
      */
     public static void registerGlobalDisposable(Disposable disposable) {
         synchronized (GlobalResourcesRepository.class) {
-            if (!globalReusedDisposables.contains(disposable)) {
-                globalReusedDisposables.add(disposable);
+            if (!GLOBAL_REUSED_DISPOSABLES.contains(disposable)) {
+                GLOBAL_REUSED_DISPOSABLES.add(disposable);
             }
         }
     }
 
     public void removeGlobalDisposable(Disposable disposable) {
         synchronized (GlobalResourcesRepository.class) {
-            this.globalReusedDisposables.remove(disposable);
+            GLOBAL_REUSED_DISPOSABLES.remove(disposable);
         }
     }
 
@@ -108,7 +113,7 @@ public class GlobalResourcesRepository {
         oneoffDisposables.clear();
 
         // call global disposable, don't clear globalReusedDisposables for reuse purpose
-        for (Disposable disposable : new ArrayList<>(globalReusedDisposables)) {
+        for (Disposable disposable : new ArrayList<>(GLOBAL_REUSED_DISPOSABLES)) {
             try {
                 disposable.destroy();
             } catch (Exception e) {
@@ -123,6 +128,7 @@ public class GlobalResourcesRepository {
 
     /**
      * Register a one-off disposable, the disposable is removed automatically on first shutdown.
+     *
      * @param disposable
      */
     public synchronized void registerDisposable(Disposable disposable) {
@@ -138,7 +144,7 @@ public class GlobalResourcesRepository {
 
     // for test
     public static List<Disposable> getGlobalReusedDisposables() {
-        return globalReusedDisposables;
+        return GLOBAL_REUSED_DISPOSABLES;
     }
 
     // for test

@@ -22,6 +22,9 @@ import org.apache.dubbo.remoting.Dispatcher;
 
 /**
  * Direct dispatcher
+ * 直接调度程序
+ *
+ * @author allen.wu
  */
 public class DirectDispatcher implements Dispatcher {
 

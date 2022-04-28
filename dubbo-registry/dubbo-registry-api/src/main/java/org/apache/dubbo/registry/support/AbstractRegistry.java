@@ -20,33 +20,16 @@ import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.common.threadpool.manager.FrameworkExecutorRepository;
-import org.apache.dubbo.common.utils.CollectionUtils;
-import org.apache.dubbo.common.utils.ConcurrentHashSet;
-import org.apache.dubbo.common.utils.ConfigUtils;
-import org.apache.dubbo.common.utils.StringUtils;
-import org.apache.dubbo.common.utils.UrlUtils;
+import org.apache.dubbo.common.utils.*;
 import org.apache.dubbo.registry.NotifyListener;
 import org.apache.dubbo.registry.Registry;
 import org.apache.dubbo.rpc.model.ApplicationModel;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -55,47 +38,98 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static org.apache.dubbo.common.constants.CommonConstants.ANY_VALUE;
-import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SPLIT_PATTERN;
-import static org.apache.dubbo.common.constants.CommonConstants.FILE_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.REGISTRY_LOCAL_FILE_CACHE_ENABLED;
-import static org.apache.dubbo.common.constants.RegistryConstants.ACCEPTS_KEY;
-import static org.apache.dubbo.common.constants.RegistryConstants.DEFAULT_CATEGORY;
-import static org.apache.dubbo.common.constants.RegistryConstants.DYNAMIC_KEY;
-import static org.apache.dubbo.common.constants.RegistryConstants.EMPTY_PROTOCOL;
-import static org.apache.dubbo.registry.Constants.CACHE;
-import static org.apache.dubbo.registry.Constants.DUBBO_REGISTRY;
-import static org.apache.dubbo.registry.Constants.REGISTRY_FILESAVE_SYNC_KEY;
-import static org.apache.dubbo.registry.Constants.USER_HOME;
+import static org.apache.dubbo.common.constants.CommonConstants.*;
+import static org.apache.dubbo.common.constants.RegistryConstants.*;
+import static org.apache.dubbo.registry.Constants.*;
 
 /**
  * AbstractRegistry. (SPI, Prototype, ThreadSafe)
+ * 虽然AbstractRegistry本身在内存中实现了注册数据的读写功能，也没有什么抽象方法，但它依旧被标记成抽象的类。
+ * 为了减少注册中心的组件的压力，AbstractRegistry会把当前节点订阅的URL信息缓存到本地的Properties文件中.
+ * 通过本地缓存提供一种容错机制，保证了服务的可靠性.
+ * eg:在网络抖动等原因而导致失败时，Consumer端的Registry就可以调用getCacheUrls()方法获取本地缓存，从而得到注册的Provider的URL信息.
+ * @author qinzhu
  */
 public abstract class AbstractRegistry implements Registry {
 
-    // URL address separator, used in file cache, service provider URL separation
+    /**
+     * URL address separator, used in file cache, service provider URL separation
+     * 在文件缓存中使用，服务提供者URL分隔符
+     */
     private static final char URL_SEPARATOR = ' ';
-    // URL address separated regular expression for parsing the service provider URL list in the file cache
+    /**
+     * URL address separated regular expression for parsing the service provider URL list in the file cache
+     * 文件缓存中解析服务提供者URL列表的正则表达式
+     */
     private static final String URL_SPLIT = "\\s+";
-    // Max times to retry to save properties to local cache file
+    /**
+     * Max times to retry to save properties to local cache file
+     * 保存到本地属性到本地文件的最大重试次数
+     */
     private static final int MAX_RETRY_TIMES_SAVE_PROPERTIES = 3;
-    // Log output
+    /**
+     * Log output
+     * 日志输出
+     */
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    // Local disk cache, where the special key value.registries records the list of registry centers, and the others are the list of notified service providers
+    /**
+     * Local disk cache, where the special key value.registries records the list of registry centers, and the others are the list of notified service providers
+     * 本地磁盘缓存，其中特殊的key value.registries记录注册中心列表，其他的是通知服务提供者的列表
+     */
     private final Properties properties = new Properties();
-    // File cache timing writing
+    /**
+     * File cache timing writing
+     * 文件缓存定时写入
+     */
     private final ExecutorService registryCacheExecutor;
+
+    /**
+     * The local cache file path
+     */
     private final AtomicLong lastCacheChanged = new AtomicLong();
+
+    /**
+     * 保存属性重试次数
+     */
     private final AtomicInteger savePropertiesRetryTimes = new AtomicInteger();
+
+    /**
+     * 注册的URL集合。
+     */
     private final Set<URL> registered = new ConcurrentHashSet<>();
+
+    /**
+     * 表示订阅URL的监听器集合，其中Key是被监听的URL，Value 是相应的监听器集合
+     */
     private final ConcurrentMap<URL, Set<NotifyListener>> subscribed = new ConcurrentHashMap<>();
+
+    /**
+     * 集合第一层 Key 是当前节点作为 Consumer 的一个 URL，表示的是该节点的某个 Consumer 角色（一个节点可以同时消费多个 Provider 节点）；
+     * Value 是一个 Map 集合，
+     * <p>
+     * 该 Map 集合的 Key 是 Provider URL 的分类（Category），例如 providers、routes、configurators 等，
+     * Value 就是相应分类下的 URL 集合。
+     */
     private final ConcurrentMap<URL, Map<String, List<URL>>> notified = new ConcurrentHashMap<>();
-    // Is it synchronized to save the file
+    /**
+     * Is it synchronized to save the file
+     * 是否同步保存文件；对应registryUrl中的save.file参数
+     */
     private boolean syncSaveFile;
+
+    /**
+     * 该URL包含了创建该Registry对象的全部信息，是AbstractRegistryFactory修改后的产物
+     */
     private URL registryUrl;
-    // Local disk cache file
+    /**
+     * Local disk cache file
+     * 本地磁盘缓存文件
+     */
     private File file;
-    private boolean localCacheEnabled;
+    /**
+     * 是否本地缓存
+     */
+    private final boolean localCacheEnabled;
     protected RegistryManager registryManager;
     protected ApplicationModel applicationModel;
 
@@ -104,12 +138,12 @@ public abstract class AbstractRegistry implements Registry {
         registryManager = url.getOrDefaultApplicationModel().getBeanFactory().getBean(RegistryManager.class);
         localCacheEnabled = url.getParameter(REGISTRY_LOCAL_FILE_CACHE_ENABLED, true);
         registryCacheExecutor = url.getOrDefaultFrameworkModel().getBeanFactory()
-            .getBean(FrameworkExecutorRepository.class).getSharedExecutor();
+                .getBean(FrameworkExecutorRepository.class).getSharedExecutor();
         if (localCacheEnabled) {
             // Start file save timer
             syncSaveFile = url.getParameter(REGISTRY_FILESAVE_SYNC_KEY, false);
             String defaultFilename = System.getProperty(USER_HOME) + DUBBO_REGISTRY +
-                url.getApplication() + "-" + url.getAddress().replaceAll(":", "-") + CACHE;
+                    url.getApplication() + "-" + url.getAddress().replaceAll(":", "-") + CACHE;
             String filename = url.getParameter(FILE_KEY, defaultFilename);
             File file = null;
             if (ConfigUtils.isNotEmpty(filename)) {
@@ -188,7 +222,7 @@ public abstract class AbstractRegistry implements Registry {
                 lockfile.createNewFile();
             }
             try (RandomAccessFile raf = new RandomAccessFile(lockfile, "rw");
-                FileChannel channel = raf.getChannel()) {
+                 FileChannel channel = raf.getChannel()) {
                 FileLock lock = channel.tryLock();
                 if (lock == null) {
                     throw new IOException("Can not lock the registry cache file " + file.getAbsolutePath() + ", ignore and retry later, maybe multi java process use the file, please config: dubbo.registry.file=xxx.properties");
@@ -242,7 +276,7 @@ public abstract class AbstractRegistry implements Registry {
             logger.warn("Failed to save registry cache file, will retry, cause: " + e.getMessage(), e);
         } finally {
             if (lockfile != null) {
-                if(!lockfile.delete()) {
+                if (!lockfile.delete()) {
                     logger.warn(String.format("Failed to delete lock file [%s]", lockfile.getName()));
                 }
             }
@@ -277,8 +311,8 @@ public abstract class AbstractRegistry implements Registry {
             String key = (String) entry.getKey();
             String value = (String) entry.getValue();
             if (StringUtils.isNotEmpty(key) && key.equals(url.getServiceKey())
-                && (Character.isLetter(key.charAt(0)) || key.charAt(0) == '_')
-                && StringUtils.isNotEmpty(value)) {
+                    && (Character.isLetter(key.charAt(0)) || key.charAt(0) == '_')
+                    && StringUtils.isNotEmpty(value)) {
                 String[] arr = value.trim().split(URL_SPLIT);
                 List<URL> urls = new ArrayList<>();
                 for (String u : arr) {
@@ -379,6 +413,11 @@ public abstract class AbstractRegistry implements Registry {
         notified.remove(url);
     }
 
+    /**
+     * provider 端因出现网络问题与注册中心断开连接后，会进行重连，重连成功后会调用该方法，将register()方法重新执行一次。
+     * 从而恢复注册数据、也会调用subscribe()方法，将之前的订阅数据重新订阅一次。
+     * @throws Exception Exception
+     */
     protected void recover() throws Exception {
         // register
         Set<URL> recoverRegistered = new HashSet<>(getRegistered());
@@ -432,10 +471,11 @@ public abstract class AbstractRegistry implements Registry {
 
     /**
      * Notify changes from the Provider side.
+     * 通知来自服务端的变化
      *
-     * @param url      consumer side url
-     * @param listener listener
-     * @param urls     provider latest urls
+     * @param url      consumer side url 消费端的URL
+     * @param listener listener 监听器
+     * @param urls     provider latest urls 最新的提供者URL
      */
     protected void notify(URL url, NotifyListener listener, List<URL> urls) {
         if (url == null) {
@@ -445,7 +485,7 @@ public abstract class AbstractRegistry implements Registry {
             throw new IllegalArgumentException("notify listener == null");
         }
         if ((CollectionUtils.isEmpty(urls))
-            && !ANY_VALUE.equals(url.getServiceInterface())) {
+                && !ANY_VALUE.equals(url.getServiceInterface())) {
             logger.warn("Ignore empty notify urls for subscribe url " + url);
             return;
         }
@@ -455,7 +495,9 @@ public abstract class AbstractRegistry implements Registry {
         // keep every provider's category.
         Map<String, List<URL>> result = new HashMap<>();
         for (URL u : urls) {
+            // consumer url和provider url匹配。
             if (UrlUtils.isMatch(url, u)) {
+                // 根据provider URL中的category参数进行分类
                 String category = u.getCategory(DEFAULT_CATEGORY);
                 List<URL> categoryList = result.computeIfAbsent(category, k -> new ArrayList<>());
                 categoryList.add(u);
@@ -469,9 +511,11 @@ public abstract class AbstractRegistry implements Registry {
             String category = entry.getKey();
             List<URL> categoryList = entry.getValue();
             categoryNotified.put(category, categoryList);
+            // 调用NotifyListener
             listener.notify(categoryList);
             // We will update our cache file after each notification.
             // When our Registry has a subscribed failure due to network jitter, we can return at least the existing cache URL.
+            // 如果开启本地缓存，更新properties集合以及底层的文件缓存.
             if (localCacheEnabled) {
                 saveProperties(url);
             }
@@ -496,6 +540,7 @@ public abstract class AbstractRegistry implements Registry {
                     }
                 }
             }
+            // service key: [group]/{interface(或path)}[:version]
             properties.setProperty(url.getServiceKey(), buf.toString());
             long version = lastCacheChanged.incrementAndGet();
             if (syncSaveFile) {

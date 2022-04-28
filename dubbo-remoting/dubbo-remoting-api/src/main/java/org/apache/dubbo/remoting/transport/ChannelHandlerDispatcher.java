@@ -28,6 +28,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * ChannelListenerDispatcher
+ * Channel 监听器分发器
+ * @author allen.wu
  */
 public class ChannelHandlerDispatcher implements ChannelHandler {
 

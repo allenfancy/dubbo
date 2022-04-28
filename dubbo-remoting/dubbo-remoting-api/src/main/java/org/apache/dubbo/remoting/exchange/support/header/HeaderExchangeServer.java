@@ -26,11 +26,7 @@ import org.apache.dubbo.common.timer.Timeout;
 import org.apache.dubbo.common.utils.Assert;
 import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.NamedThreadFactory;
-import org.apache.dubbo.remoting.Channel;
-import org.apache.dubbo.remoting.ChannelHandler;
-import org.apache.dubbo.remoting.Constants;
-import org.apache.dubbo.remoting.RemotingException;
-import org.apache.dubbo.remoting.RemotingServer;
+import org.apache.dubbo.remoting.*;
 import org.apache.dubbo.remoting.exchange.ExchangeChannel;
 import org.apache.dubbo.remoting.exchange.ExchangeServer;
 import org.apache.dubbo.remoting.exchange.Request;
@@ -44,27 +40,37 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Collections.unmodifiableCollection;
 import static org.apache.dubbo.common.constants.CommonConstants.READONLY_EVENT;
-import static org.apache.dubbo.remoting.Constants.HEARTBEAT_CHECK_TICK;
-import static org.apache.dubbo.remoting.Constants.LEAST_HEARTBEAT_DURATION;
-import static org.apache.dubbo.remoting.Constants.TICKS_PER_WHEEL;
+import static org.apache.dubbo.remoting.Constants.*;
 import static org.apache.dubbo.remoting.utils.UrlUtils.getHeartbeat;
 import static org.apache.dubbo.remoting.utils.UrlUtils.getIdleTimeout;
 
 /**
- * ExchangeServerImpl
+ * Header exchange server
+ *
+ * @author allen.wu
  */
 public class HeaderExchangeServer implements ExchangeServer {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    /**
+     * remoting server
+     */
     private final RemotingServer server;
-    private AtomicBoolean closed = new AtomicBoolean(false);
+
+    /**
+     * 是否关闭
+     */
+    private final AtomicBoolean closed = new AtomicBoolean(false);
 
     public static GlobalResourceInitializer<HashedWheelTimer> IDLE_CHECK_TIMER = new GlobalResourceInitializer<>(() ->
-        new HashedWheelTimer(new NamedThreadFactory("dubbo-server-idleCheck", true), 1,
-            TimeUnit.SECONDS, TICKS_PER_WHEEL),
-        timer -> timer.stop());
+            new HashedWheelTimer(new NamedThreadFactory("dubbo-server-idleCheck", true), 1,
+                    TimeUnit.SECONDS, TICKS_PER_WHEEL),
+            HashedWheelTimer::stop);
 
+    /**
+     * close timer.
+     */
     private Timeout closeTimer;
 
     public HeaderExchangeServer(RemotingServer server) {
@@ -82,15 +88,19 @@ public class HeaderExchangeServer implements ExchangeServer {
         return server.isClosed();
     }
 
+    /**
+     * 判断server是否在运行
+     *
+     * @return true if server is running
+     */
     private boolean isRunning() {
         Collection<Channel> channels = getChannels();
         for (Channel channel : channels) {
 
-            /**
-             *  If there are any client connections,
-             *  our server should be running.
+            /*
+             * If there are any client connections, our server should be running.
+             * 如果有任何客户端连接，我们的服务器应该正在运行。
              */
-
             if (channel.isConnected()) {
                 return true;
             }
@@ -100,9 +110,11 @@ public class HeaderExchangeServer implements ExchangeServer {
 
     @Override
     public void close() {
+        // 1. CAS 设置closed为true
         if (!closed.compareAndSet(false, true)) {
             return;
         }
+        // 2. 关闭closeTimer
         doClose();
         server.close();
     }
@@ -112,13 +124,16 @@ public class HeaderExchangeServer implements ExchangeServer {
         if (!closed.compareAndSet(false, true)) {
             return;
         }
+        // 1. 将底层RemotingServer的closing字段设置为true，表示当前Server正在关闭，不再接收连接
         startClose();
         if (timeout > 0) {
             final long max = timeout;
             final long start = System.currentTimeMillis();
             if (getUrl().getParameter(Constants.CHANNEL_SEND_READONLYEVENT_KEY, true)) {
+                // 2. 发送ReadOnly事件请求通知客户端
                 sendChannelReadOnlyEvent();
             }
+            // 3. 循环等待客户端断开连接
             while (HeaderExchangeServer.this.isRunning()
                     && System.currentTimeMillis() - start < max) {
                 try {
@@ -128,7 +143,9 @@ public class HeaderExchangeServer implements ExchangeServer {
                 }
             }
         }
+        // 4. 将自身closed字段设置为true，取消CloseTimerTask定时任务
         doClose();
+        // 5. 关闭Transport层的Server
         server.close(timeout);
     }
 
@@ -275,8 +292,8 @@ public class HeaderExchangeServer implements ExchangeServer {
             AbstractTimerTask.ChannelProvider cp = () -> unmodifiableCollection(HeaderExchangeServer.this.getChannels());
             int idleTimeout = getIdleTimeout(url);
             long idleTimeoutTick = calculateLeastDuration(idleTimeout);
-            CloseTimerTask closeTimerTask = new CloseTimerTask(cp, idleTimeoutTick, idleTimeout);
 
+            CloseTimerTask closeTimerTask = new CloseTimerTask(cp, idleTimeoutTick, idleTimeout);
             // init task and start timer.
             this.closeTimer = IDLE_CHECK_TIMER.get().newTimeout(closeTimerTask, idleTimeoutTick, TimeUnit.MILLISECONDS);
         }

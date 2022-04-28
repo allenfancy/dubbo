@@ -30,13 +30,32 @@ import java.lang.reflect.Method;
 
 /**
  * InvokerHandler
+ * 通过JDK动态代理的方式，将Invoker转换为InvocationHandler
+ *
+ * @author allen.wu
  */
 public class InvokerInvocationHandler implements InvocationHandler {
     private static final Logger logger = LoggerFactory.getLogger(InvokerInvocationHandler.class);
+
+    /**
+     * Invoker对象
+     */
     private final Invoker<?> invoker;
-    private ServiceModel serviceModel;
-    private URL url;
-    private String protocolServiceKey;
+
+    /**
+     * DUBBO3.0后的service model
+     */
+    private final ServiceModel serviceModel;
+
+    /**
+     * url
+     */
+    private final URL url;
+
+    /**
+     * 协议key
+     */
+    private final String protocolServiceKey;
 
     public InvokerInvocationHandler(Invoker<?> handler) {
         this.invoker = handler;
@@ -47,11 +66,13 @@ public class InvokerInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        // 1. 对于Object中定义的方法，直接调用Invoker对象的相应方法即可
         if (method.getDeclaringClass() == Object.class) {
             return method.invoke(invoker, args);
         }
         String methodName = method.getName();
         Class<?>[] parameterTypes = method.getParameterTypes();
+        // 2. 对$destroy、hashCode、toString等方法的特殊处理
         if (parameterTypes.length == 0) {
             if ("toString".equals(methodName)) {
                 return invoker.toString();
@@ -64,12 +85,14 @@ public class InvokerInvocationHandler implements InvocationHandler {
         } else if (parameterTypes.length == 1 && "equals".equals(methodName)) {
             return invoker.equals(args[0]);
         }
+        // 3.创建RpcInvocation对象，后面会作为远程RPC调用的参数
         RpcInvocation rpcInvocation = new RpcInvocation(serviceModel, method, invoker.getInterface().getName(), protocolServiceKey, args);
 
         if (serviceModel instanceof ConsumerModel) {
             rpcInvocation.put(Constants.CONSUMER_MODEL, serviceModel);
             rpcInvocation.put(Constants.METHOD_MODEL, ((ConsumerModel) serviceModel).getMethodModel(method));
         }
+        // 4. 调用invoke()方法发起远程调用，拿到AsyncRpcResult之后，调用recreate()方法获取响应结果(或是Future)
         return InvocationUtil.invoke(invoker, rpcInvocation);
     }
 }

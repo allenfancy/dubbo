@@ -42,6 +42,9 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.LAZY_REQUEST_WITH_WA
 
 /**
  * dubbo protocol support class.
+ * 懒连接客户端
+ *
+ * @author allen.wu
  */
 @SuppressWarnings("deprecation")
 final class LazyConnectExchangeClient implements ExchangeClient {
@@ -268,7 +271,7 @@ final class LazyConnectExchangeClient implements ExchangeClient {
 
         if (!isConnected() && !needReconnect) {
             throw new IllegalStateException("LazyConnectExchangeClient is not connected normally, " +
-                "and send.reconnect is configured as false, the request fails quickly" + url);
+                    "and send.reconnect is configured as false, the request fails quickly" + url);
         }
     }
 }

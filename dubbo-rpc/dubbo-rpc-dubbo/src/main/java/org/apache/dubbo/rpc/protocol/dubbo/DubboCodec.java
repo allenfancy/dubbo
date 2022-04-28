@@ -40,15 +40,16 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.apache.dubbo.common.constants.CommonConstants.DUBBO_VERSION_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.PATH_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.*;
 import static org.apache.dubbo.rpc.protocol.dubbo.Constants.DECODE_IN_IO_THREAD_KEY;
 import static org.apache.dubbo.rpc.protocol.dubbo.Constants.DEFAULT_DECODE_IN_IO_THREAD;
 
 /**
  * Dubbo codec.
+ * ExchangeCodec处理了 Dubbo 协议的请求头的能力，而DubboCodec则是通过继承的方式，
+ * 在ExchangeCodec 基础之上，添加了解析 Dubbo 消息体的功能
+ *
+ * @author allen.wu
  */
 public class DubboCodec extends ExchangeCodec {
 
@@ -63,8 +64,8 @@ public class DubboCodec extends ExchangeCodec {
     public static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
     public static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
     private static final Logger log = LoggerFactory.getLogger(DubboCodec.class);
-    private CallbackServiceCodec callbackServiceCodec;
-    private FrameworkModel frameworkModel;
+    private final CallbackServiceCodec callbackServiceCodec;
+    private final FrameworkModel frameworkModel;
 
     public DubboCodec(FrameworkModel frameworkModel) {
         this.frameworkModel = frameworkModel;
@@ -102,6 +103,7 @@ public class DubboCodec extends ExchangeCodec {
                         if (channel.getUrl().getParameter(DECODE_IN_IO_THREAD_KEY, DEFAULT_DECODE_IN_IO_THREAD)) {
                             result = new DecodeableRpcResult(channel, res, is,
                                     (Invocation) getRequestData(id), proto);
+                            // 直接调用decode()方法在当前IO线程中解码
                             result.decode();
                         } else {
                             result = new DecodeableRpcResult(channel, res,
@@ -144,15 +146,20 @@ public class DubboCodec extends ExchangeCodec {
                     }
                 } else {
                     DecodeableRpcInvocation inv;
+                    // DECODE_IN_IO_THREAD_KEY 这个参数决定是否在 DubboCodec 中进行解码（DubboCodec 是在 IO 线程中调用的）
                     if (channel.getUrl().getParameter(DECODE_IN_IO_THREAD_KEY, DEFAULT_DECODE_IN_IO_THREAD)) {
                         inv = new DecodeableRpcInvocation(frameworkModel, channel, req, is, proto);
+                        // 直接调用decode()方法在当前IO线程中解码
                         inv.decode();
                     } else {
+                        // 如果不是在DubboCodec中的IO线程中解码，会在什么地方进行解码？
+                        // fixme: DecodeHandler#received()进行解码;(Transport层）
                         inv = new DecodeableRpcInvocation(frameworkModel, channel, req,
                                 new UnsafeByteArrayInputStream(readMessageData(is)), proto);
                     }
                     data = inv;
                 }
+                // 设置到Request请求的data字段
                 req.setData(data);
             } catch (Throwable t) {
                 if (log.isWarnEnabled()) {
@@ -176,6 +183,14 @@ public class DubboCodec extends ExchangeCodec {
         return new byte[]{};
     }
 
+    /**
+     * 覆盖ExchangeCodec#encodeRequestData()方法，按照Dubbo协议的格式编码Request请求体
+     *
+     * @param channel channel
+     * @param out     out
+     * @param data    data
+     * @throws IOException io exception
+     */
     @Override
     protected void encodeRequestData(Channel channel, ObjectOutput out, Object data) throws IOException {
         encodeRequestData(channel, out, data, DUBBO_VERSION);
@@ -188,25 +203,31 @@ public class DubboCodec extends ExchangeCodec {
 
     @Override
     protected void encodeRequestData(Channel channel, ObjectOutput out, Object data, String version) throws IOException {
+        // 1. 请求体相关的内容，都封装在了RpcInvocation对象中
         RpcInvocation inv = (RpcInvocation) data;
-
+        // 2. 写入版本号
         out.writeUTF(version);
         // https://github.com/apache/dubbo/issues/6138
         String serviceName = inv.getAttachment(INTERFACE_KEY);
         if (serviceName == null) {
             serviceName = inv.getAttachment(PATH_KEY);
         }
+        // 3. 写入服务名称
         out.writeUTF(serviceName);
+        // 4. 写入Service版本号
         out.writeUTF(inv.getAttachment(VERSION_KEY));
-
+        // 5. 写入方法名称
         out.writeUTF(inv.getMethodName());
+        // 6. 写入参数类型列表
         out.writeUTF(inv.getParameterTypesDesc());
+        // 7. 依次写入全部参数
         Object[] args = inv.getArguments();
         if (args != null) {
             for (int i = 0; i < args.length; i++) {
                 out.writeObject(callbackServiceCodec.encodeInvocationArgument(channel, inv, i));
             }
         }
+        // 8. 依次写入全部的附加信息
         out.writeAttachments(inv.getObjectAttachments());
     }
 

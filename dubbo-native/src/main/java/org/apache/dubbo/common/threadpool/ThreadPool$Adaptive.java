@@ -18,6 +18,7 @@ package org.apache.dubbo.common.threadpool;
 import org.apache.dubbo.rpc.model.ScopeModel;
 import org.apache.dubbo.rpc.model.ScopeModelUtil;
 public class ThreadPool$Adaptive implements org.apache.dubbo.common.threadpool.ThreadPool {
+@Override
 public java.util.concurrent.Executor getExecutor(org.apache.dubbo.common.URL arg0)  {
 if (arg0 == null) throw new IllegalArgumentException("url == null");
 org.apache.dubbo.common.URL url = arg0;

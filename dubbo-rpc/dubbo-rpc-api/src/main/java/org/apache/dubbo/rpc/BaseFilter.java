@@ -16,9 +16,21 @@
  */
 package org.apache.dubbo.rpc;
 
+/**
+ * 基础过滤器
+ *
+ * @author allen.wu
+ */
 public interface BaseFilter {
+
     /**
      * Always call invoker.invoke() in the implementation to hand over the request to the next filter node.
+     * 将请求传给后续的Invoker进行处理
+     *
+     * @param invoker    invoker
+     * @param invocation invocation
+     * @return result result
+     * @throws RpcException RpcException
      */
     Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException;
 
@@ -28,6 +40,8 @@ public interface BaseFilter {
      * <p>
      * There's something that needs to pay attention on legacy synchronous style filer refactor, the thing is, try to move logics
      * previously defined in the 'finally block' to both onResponse and onError.
+     * <p>
+     * 用于监听响应以及异常
      */
     interface Listener {
 

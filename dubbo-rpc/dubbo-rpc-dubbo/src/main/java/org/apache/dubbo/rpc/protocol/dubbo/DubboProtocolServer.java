@@ -24,11 +24,27 @@ import org.apache.dubbo.rpc.ProtocolServer;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * The type Dubbo protocol server.
+ *
+ * @author qian.lei
+ */
 public class DubboProtocolServer implements ProtocolServer {
 
-    private RemotingServer server;
+    /**
+     * remoting server
+     */
+    private final RemotingServer server;
+
+    /**
+     * remoting server address
+     */
     private String address;
-    private Map<String, Object> attributes = new ConcurrentHashMap<>();
+
+    /**
+     * remoting server attributes
+     */
+    private final Map<String, Object> attributes = new ConcurrentHashMap<>();
 
     public DubboProtocolServer(RemotingServer server) {
         this.server = server;

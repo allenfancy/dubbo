@@ -24,16 +24,25 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * ExchangeHandler. (API, Prototype, ThreadSafe)
+ * ExchangeHandler 接口是 Exchange 层与上层交互的接口之一，上层调用方可以实现该接口完成自身的功能；
+ * 然后再由 HeaderExchangeHandler 修饰，具备 Exchange 层处理 Request-Response 的能力；
+ * 最后再由 Transport ChannelHandler 修饰，具备 Transport 层的能力
+ *
+ *
+ *
+ *
+ * @author allen.wu
  */
 public interface ExchangeHandler extends ChannelHandler, TelnetHandler {
 
     /**
      * reply.
+     * 回复
      *
-     * @param channel
-     * @param request
-     * @return response
-     * @throws RemotingException
+     * @param channel exchange channel
+     * @param request 请求体
+     * @return response 响应体
+     * @throws RemotingException remoting exception
      */
     CompletableFuture<Object> reply(ExchangeChannel channel, Object request) throws RemotingException;
 

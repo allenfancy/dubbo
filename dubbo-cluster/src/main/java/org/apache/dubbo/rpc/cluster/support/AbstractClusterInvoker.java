@@ -372,7 +372,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         setContext(invoker);
         Result result;
         try {
-            if (ProfilerSwitch.isEnableSimpleProfiler()) {
+            if (ProfilerSwitch.getEnableSimpleProfiler()) {
                 InvocationProfilerUtils.enterProfiler(invocation, "Invoker invoke. Target Address: " + invoker.getUrl().getAddress());
             }
             result = invoker.invoke(invocation);

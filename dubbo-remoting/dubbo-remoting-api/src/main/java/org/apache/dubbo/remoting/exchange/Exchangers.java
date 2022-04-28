@@ -27,6 +27,10 @@ import org.apache.dubbo.remoting.transport.ChannelHandlerAdapter;
 
 /**
  * Exchanger facade. (API, Static, ThreadSafe)
+ * Exchange层的入口是Exchangers这个门面类，
+ * 其中提供了多个 bind() 以及 connect() 方法的重载，这些重载方法最终会通过 SPI 机制，获取 Exchanger 接口的扩展实现
+ *
+ * @author allen.wu
  */
 public class Exchangers {
 
@@ -107,8 +111,16 @@ public class Exchangers {
         return getExchanger(url).connect(url, handler);
     }
 
+    /**
+     * get exchanger by url
+     *
+     * @param url url
+     * @return Exchanger
+     */
     public static Exchanger getExchanger(URL url) {
+        // 1. 获取exchanger类型
         String type = url.getParameter(Constants.EXCHANGER_KEY, Constants.DEFAULT_EXCHANGER);
+        // 2. 获取Exchanger实例
         return url.getOrDefaultFrameworkModel().getExtensionLoader(Exchanger.class).getExtension(type);
     }
 

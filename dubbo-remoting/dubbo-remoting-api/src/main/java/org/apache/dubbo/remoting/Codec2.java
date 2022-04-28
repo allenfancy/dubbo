@@ -23,17 +23,45 @@ import org.apache.dubbo.remoting.buffer.ChannelBuffer;
 
 import java.io.IOException;
 
+/**
+ * codec2 用于字节和有效的字符串转换
+ *
+ * @author allen.wu
+ */
 @SPI(scope = ExtensionScope.FRAMEWORK)
 public interface Codec2 {
 
+    /**
+     * 编码
+     *
+     * @param channel channel
+     * @param buffer  buffer
+     * @param message message
+     * @throws IOException io exception
+     */
     @Adaptive({Constants.CODEC_KEY})
     void encode(Channel channel, ChannelBuffer buffer, Object message) throws IOException;
 
+    /**
+     * 解码
+     *
+     * @param channel channel
+     * @param buffer  buffer
+     * @return object
+     * @throws IOException io exception
+     */
     @Adaptive({Constants.CODEC_KEY})
     Object decode(Channel channel, ChannelBuffer buffer) throws IOException;
 
 
+    /**
+     * decode 结果
+     */
     enum DecodeResult {
+        /**
+         * 1.需要更多输入
+         * 2.跳过更多输入
+         */
         NEED_MORE_INPUT, SKIP_SOME_INPUT
     }
 

@@ -30,20 +30,16 @@ import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
 
 import static java.lang.String.format;
-import static org.apache.dubbo.common.constants.CommonConstants.DUMP_DIRECTORY;
-import static org.apache.dubbo.common.constants.CommonConstants.OS_NAME_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.OS_WIN_PREFIX;
+import static org.apache.dubbo.common.constants.CommonConstants.*;
 
 /**
- * Abort Policy.
- * Log warn info when abort.
+ * Abort Policy. Log warn info when abort.
+ * 抛弃策略；当抛弃时，日志告警
+ *
+ * @author allen.wu
  */
 public class AbortPolicyWithReport extends ThreadPoolExecutor.AbortPolicy {
 
@@ -61,7 +57,7 @@ public class AbortPolicyWithReport extends ThreadPoolExecutor.AbortPolicy {
 
     private static final String DEFAULT_DATETIME_FORMAT = "yyyy-MM-dd_HH:mm:ss";
 
-    private static Semaphore guard = new Semaphore(1);
+    private static final Semaphore GUARD = new Semaphore(1);
 
     private static final String USER_HOME = System.getProperty("user.home");
 
@@ -98,6 +94,7 @@ public class AbortPolicyWithReport extends ThreadPoolExecutor.AbortPolicy {
 
     /**
      * dispatch ThreadPoolExhaustedEvent
+     *
      * @param msg
      */
     public void dispatchThreadPoolExhaustedEvent(String msg) {
@@ -112,7 +109,7 @@ public class AbortPolicyWithReport extends ThreadPoolExecutor.AbortPolicy {
             return;
         }
 
-        if (!guard.tryAcquire()) {
+        if (!GUARD.tryAcquire()) {
             return;
         }
 
@@ -139,7 +136,7 @@ public class AbortPolicyWithReport extends ThreadPoolExecutor.AbortPolicy {
             } catch (Throwable t) {
                 logger.error("dump jStack error", t);
             } finally {
-                guard.release();
+                GUARD.release();
             }
             lastPrintTime = System.currentTimeMillis();
         });

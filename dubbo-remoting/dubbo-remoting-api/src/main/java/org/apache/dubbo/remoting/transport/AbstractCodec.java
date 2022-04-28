@@ -36,14 +36,27 @@ import static org.apache.dubbo.common.constants.CommonConstants.SIDE_KEY;
 
 /**
  * AbstractCodec
+ * 抽象的codec2的类.
+ *
+ * @author allen.wu
  */
 public abstract class AbstractCodec implements Codec2, ScopeModelAware {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractCodec.class);
 
+    /**
+     * 客户端
+     */
     private static final String CLIENT_SIDE = "client";
 
+    /**
+     * 服务端
+     */
     private static final String SERVER_SIDE = "server";
+
+    /**
+     * frame work model.
+     */
     protected FrameworkModel frameworkModel;
 
     @Override
@@ -55,8 +68,7 @@ public abstract class AbstractCodec implements Codec2, ScopeModelAware {
         int payload = getPayload(channel);
         boolean overPayload = isOverPayload(payload, size);
         if (overPayload) {
-            ExceedPayloadLimitException e = new ExceedPayloadLimitException(
-                    "Data length too large: " + size + ", max payload: " + payload + ", channel: " + channel);
+            ExceedPayloadLimitException e = new ExceedPayloadLimitException("Data length too large: " + size + ", max payload: " + payload + ", channel: " + channel);
             logger.error(e);
             throw e;
         }
@@ -71,43 +83,72 @@ public abstract class AbstractCodec implements Codec2, ScopeModelAware {
     }
 
     protected static boolean isOverPayload(int payload, long size) {
-        if (payload > 0 && size > payload) {
-            return true;
-        }
-        return false;
+        return payload > 0 && size > payload;
     }
 
+    /**
+     * 获取序列化实现类
+     *
+     * @param channel channel
+     * @param req     req
+     * @return Serialization
+     */
     protected Serialization getSerialization(Channel channel, Request req) {
         return CodecSupport.getSerialization(channel.getUrl());
     }
 
+    /**
+     * 获取序列化实现类
+     *
+     * @param channel channel
+     * @param res     res
+     * @return Serialization
+     */
     protected Serialization getSerialization(Channel channel, Response res) {
         return CodecSupport.getSerialization(channel.getUrl());
     }
 
+    /**
+     * 获取序列化实现类
+     *
+     * @param channel channel
+     * @return Serialization
+     */
     protected Serialization getSerialization(Channel channel) {
         return CodecSupport.getSerialization(channel.getUrl());
     }
 
+    /**
+     * 是否是客户端
+     *
+     * @param channel channel
+     * @return 如果为true表示客户端，否则不是客户端
+     */
     protected boolean isClientSide(Channel channel) {
+        //1. 从channel的attribute中获取side字段
         String side = (String) channel.getAttribute(SIDE_KEY);
         if (CLIENT_SIDE.equals(side)) {
             return true;
         } else if (SERVER_SIDE.equals(side)) {
             return false;
         } else {
+            //2.1 从channel的remoteAddress中获取address
             InetSocketAddress address = channel.getRemoteAddress();
             URL url = channel.getUrl();
-            boolean isClient = url.getPort() == address.getPort()
-                && NetUtils.filterLocalHost(url.getIp()).equals(
-                NetUtils.filterLocalHost(address.getAddress()
-                    .getHostAddress()));
-            channel.setAttribute(SIDE_KEY, isClient ? CLIENT_SIDE
-                : SERVER_SIDE);
+            //2.2 判断url的端口和remoteAddress端口并且url的IP和remoteAddress中的host address的IP一致
+            boolean isClient = url.getPort() == address.getPort() && NetUtils.filterLocalHost(url.getIp()).equals(NetUtils.filterLocalHost(address.getAddress().getHostAddress()));
+            //2.3 设置side字段
+            channel.setAttribute(SIDE_KEY, isClient ? CLIENT_SIDE : SERVER_SIDE);
             return isClient;
         }
     }
 
+    /**
+     * 是否是服务端
+     *
+     * @param channel channel
+     * @return 如果不是客户端，即为服务端
+     */
     protected boolean isServerSide(Channel channel) {
         return !isClientSide(channel);
     }

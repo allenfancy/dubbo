@@ -17,24 +17,33 @@
 package org.apache.dubbo.remoting.transport;
 
 import org.apache.dubbo.common.URL;
-import org.apache.dubbo.remoting.Channel;
-import org.apache.dubbo.remoting.ChannelHandler;
-import org.apache.dubbo.remoting.Constants;
-import org.apache.dubbo.remoting.Endpoint;
-import org.apache.dubbo.remoting.RemotingException;
+import org.apache.dubbo.remoting.*;
 
 /**
  * AbstractPeer
+ *
+ * @author allen.wu
  */
 public abstract class AbstractPeer implements Endpoint, ChannelHandler {
 
+    /**
+     * AbstractPeer对ChannelHandler接口的所有实现，
+     * 都是委托给了这个 ChannelHandler 对象
+     */
     private final ChannelHandler handler;
 
+    /**
+     * 端点自身的URL
+     */
     private volatile URL url;
 
-    // closing closed means the process is being closed and close is finished
+    /**
+     * 记录当前端点的状态:关闭中
+     */
     private volatile boolean closing;
-
+    /**
+     * 记录当前端点的状态:关闭
+     */
     private volatile boolean closed;
 
     public AbstractPeer(URL url, ChannelHandler handler) {

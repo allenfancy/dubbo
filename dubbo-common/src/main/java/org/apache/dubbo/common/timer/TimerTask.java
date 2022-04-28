@@ -21,14 +21,21 @@ import java.util.concurrent.TimeUnit;
 /**
  * A task which is executed after the delay specified with
  * {@link Timer#newTimeout(TimerTask, long, TimeUnit)} (TimerTask, long, TimeUnit)}.
+ * 指定的延迟后执行的任务
+ * <p>
+ * {@link Timer#newTimeout(TimerTask, long, TimeUnit)} (TimerTask, long, TimeUnit)}。
+ *
+ * @author allen.wu
  */
 public interface TimerTask {
 
     /**
      * Executed after the delay specified with
      * {@link Timer#newTimeout(TimerTask, long, TimeUnit)}.
+     * 在{@link Timer#newTimeout(TimerTask, long, TimeUnit)}指定的延迟后执行。
      *
-     * @param timeout a handle which is associated with this task
+     * @param timeout a handle which is associated with this task 与此任务相关联的句柄
+     * @throws Exception exception
      */
     void run(Timeout timeout) throws Exception;
 }

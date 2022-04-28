@@ -35,16 +35,45 @@ import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_SERVER_S
 
 /**
  * dubbo protocol support class.
+ * ExchangeClient 的一个装饰器，在原始 ExchangeClient 对象基础上添加了引用计数的功能
+ * 对于同一个地址的共享连接，就可以满足两个基本需求：
+ * 当引用次数referenceCount减到 0 的时候，ExchangeClient 连接关闭；
+ * 当引用次数referenceCount未减到 0 的时候，底层的 ExchangeClient 不能关闭。
+ * ------
+ * 用于共享连接创建使用，增强
+ * @author allen.wu
  */
 @SuppressWarnings("deprecation")
 final class ReferenceCountExchangeClient implements ExchangeClient {
 
     private final static Logger logger = LoggerFactory.getLogger(ReferenceCountExchangeClient.class);
+
+    /**
+     * url
+     */
     private final URL url;
+
+    /**
+     * 记录该 Client 被应用的次数；
+     */
     private final AtomicInteger referenceCount = new AtomicInteger(0);
+
+    /**
+     * 断开连接的次数
+     */
     private final AtomicInteger disconnectCount = new AtomicInteger(0);
+
     private final Integer warningPeriod = 50;
+
+    /**
+     * exchange client.
+     */
     private ExchangeClient client;
+
+
+    /**
+     * 关闭等待时间；默认为1000ms
+     */
     private int shutdownWaitTime = DEFAULT_SERVER_SHUTDOWN_TIMEOUT;
 
     public ReferenceCountExchangeClient(ExchangeClient client, String codec) {
@@ -168,19 +197,20 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
     /**
      * when destroy unused invoker, closeAll should be true
+     * 当无用的invoker销毁时，closeAll应该是true
      *
-     * @param timeout
-     * @param closeAll
+     * @param timeout  timeout
+     * @param closeAll closeAll
      */
     private void closeInternal(int timeout, boolean closeAll) {
+        // 1. 若closeAll为true，并且referenceCount为0，则直接关闭
         if (closeAll || referenceCount.decrementAndGet() <= 0) {
             if (timeout == 0) {
                 client.close();
-
             } else {
                 client.close(timeout);
             }
-
+            // 2. 创建幽灵连接；主要作用为：异常情况的兜底
             replaceWithLazyClient();
         }
     }
@@ -193,8 +223,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
     /**
      * when closing the client, the client needs to be set to LazyConnectExchangeClient, and if a new call is made,
      * the client will "resurrect".
-     *
-     * @return
+     * 当关闭客户端时，需要将客户端设置为LazyConnectExchangeClient，如果进行了新调用，客户端将“复活”。
      */
     private void replaceWithLazyClient() {
         // start warning at second replaceWithLazyClient()
@@ -202,8 +231,9 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
             logger.warn(url.getAddress() + " " + url.getServiceKey() + " safe guard client , should not be called ,must have a bug.");
         }
 
-        /**
+        /*
          * the order of judgment in the if statement cannot be changed.
+         * if语句中的判决顺序不能改变。
          */
         if (!(client instanceof LazyConnectExchangeClient)) {
             client = new LazyConnectExchangeClient(url, client.getExchangeHandler());
@@ -217,19 +247,33 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
     /**
      * The reference count of current ExchangeClient, connection will be closed if all invokers destroyed.
+     * 增加引用的计数
      */
     public void incrementAndGetCount() {
         referenceCount.incrementAndGet();
     }
 
+    /**
+     * 获取被引用的次数
+     *
+     * @return referenceCount
+     */
     public int getCount() {
         return referenceCount.get();
     }
 
+    /**
+     * @return shut down wait time
+     */
     public int getShutdownWaitTime() {
         return shutdownWaitTime;
     }
 
+    /**
+     * 设置shut down wait time
+     *
+     * @param shutdownWaitTime shutdownWaitTime
+     */
     public void setShutdownWaitTime(int shutdownWaitTime) {
         this.shutdownWaitTime = shutdownWaitTime;
     }

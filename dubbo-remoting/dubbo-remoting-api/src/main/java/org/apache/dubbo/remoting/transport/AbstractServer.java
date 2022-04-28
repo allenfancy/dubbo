@@ -22,11 +22,7 @@ import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.common.threadpool.manager.ExecutorRepository;
 import org.apache.dubbo.common.utils.ExecutorUtil;
 import org.apache.dubbo.common.utils.NetUtils;
-import org.apache.dubbo.remoting.Channel;
-import org.apache.dubbo.remoting.ChannelHandler;
-import org.apache.dubbo.remoting.Constants;
-import org.apache.dubbo.remoting.RemotingException;
-import org.apache.dubbo.remoting.RemotingServer;
+import org.apache.dubbo.remoting.*;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -39,17 +35,31 @@ import static org.apache.dubbo.remoting.Constants.DEFAULT_ACCEPTS;
 
 /**
  * AbstractServer
+ * 抽象的server层
+ *
+ * @author allen.wu
  */
 public abstract class AbstractServer extends AbstractEndpoint implements RemotingServer {
 
     protected static final String SERVER_THREAD_POOL_NAME = "DubboServerHandler";
     private static final Logger logger = LoggerFactory.getLogger(AbstractServer.class);
-    private ExecutorService executor;
-    private InetSocketAddress localAddress;
-    private InetSocketAddress bindAddress;
+
+    /**
+     * 当前 Server 关联的线程池；由executorRepository创建并管理
+     */
+    private final ExecutorService executor;
+    private final InetSocketAddress localAddress;
+    private final InetSocketAddress bindAddress;
+
+    /**
+     * server端最大接收连接数
+     */
     private int accepts;
 
-    private ExecutorRepository executorRepository;
+    /**
+     * 负责管理线程池
+     */
+    private final ExecutorRepository executorRepository;
 
     public AbstractServer(URL url, ChannelHandler handler) throws RemotingException {
         super(url, handler);
@@ -64,6 +74,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
         bindAddress = new InetSocketAddress(bindIp, bindPort);
         this.accepts = url.getParameter(ACCEPTS_KEY, DEFAULT_ACCEPTS);
         try {
+            //调用doOpen()这个抽象方法，启动该Server
             doOpen();
             if (logger.isInfoEnabled()) {
                 logger.info("Start " + getClass().getSimpleName() + " bind " + getBindAddress() + ", export " + getLocalAddress());
@@ -75,8 +86,18 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
         executor = executorRepository.createExecutorIfAbsent(url);
     }
 
+    /**
+     * 启动Server
+     *
+     * @throws Throwable Throwable
+     */
     protected abstract void doOpen() throws Throwable;
 
+    /**
+     * 关闭Server
+     *
+     * @throws Throwable Throwable
+     */
     protected abstract void doClose() throws Throwable;
 
     @Override

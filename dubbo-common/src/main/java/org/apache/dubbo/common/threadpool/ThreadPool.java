@@ -27,16 +27,19 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREADPOOL_KEY;
 
 /**
  * ThreadPool
+ * TODO which scope for ThreadPool? APPLICATION or FRAMEWORK
+ *
+ * @author allen.wu
  */
-//TODO which scope for ThreadPool? APPLICATION or FRAMEWORK
 @SPI(value = "fixed", scope = ExtensionScope.FRAMEWORK)
 public interface ThreadPool {
 
     /**
      * Thread pool
+     * 线程池
      *
-     * @param url URL contains thread parameter
-     * @return thread pool
+     * @param url URL contains thread parameter url的线程参数
+     * @return thread pool 线程池
      */
     @Adaptive({THREADPOOL_KEY})
     Executor getExecutor(URL url);

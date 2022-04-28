@@ -21,43 +21,46 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * TODO
+ * Profiler
+ *
+ * @author allen.wu
  */
 public class ProfilerSwitch {
-    private final static AtomicBoolean enableDetailProfiler = new AtomicBoolean(false);
+    private final static AtomicBoolean ENABLE_DETAIL_PROFILER = new AtomicBoolean(false);
 
-    private final static AtomicBoolean enableSimpleProfiler = new AtomicBoolean(true);
+    private final static AtomicBoolean ENABLE_SIMPLE_PROFILER = new AtomicBoolean(true);
 
-    private final static AtomicReference<Double> warnPercent = new AtomicReference<>(0.75);
+    private final static AtomicReference<Double> WARN_PERCENT = new AtomicReference<>(0.75);
 
     public static void enableSimpleProfiler() {
-        enableSimpleProfiler.set(true);
+        ENABLE_SIMPLE_PROFILER.set(true);
     }
 
     public static void disableSimpleProfiler() {
-        enableSimpleProfiler.set(false);
+        ENABLE_SIMPLE_PROFILER.set(false);
     }
 
     public static void enableDetailProfiler() {
-        enableDetailProfiler.set(true);
+        ENABLE_DETAIL_PROFILER.set(true);
     }
 
     public static void disableDetailProfiler() {
-        enableDetailProfiler.set(false);
+        ENABLE_DETAIL_PROFILER.set(false);
     }
 
-    public static boolean isEnableDetailProfiler() {
-        return enableDetailProfiler.get() && enableSimpleProfiler.get();
+    public static boolean getEnableDetailProfiler() {
+        return ENABLE_DETAIL_PROFILER.get() && ENABLE_SIMPLE_PROFILER.get();
     }
 
-    public static boolean isEnableSimpleProfiler() {
-        return enableSimpleProfiler.get();
+    public static boolean getEnableSimpleProfiler() {
+        return ENABLE_SIMPLE_PROFILER.get();
     }
 
     public static double getWarnPercent() {
-        return warnPercent.get();
+        return WARN_PERCENT.get();
     }
 
     public static void setWarnPercent(double percent) {
-        warnPercent.set(percent);
+        WARN_PERCENT.set(percent);
     }
 }

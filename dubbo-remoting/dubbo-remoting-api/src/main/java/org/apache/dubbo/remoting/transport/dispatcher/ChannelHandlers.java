@@ -22,6 +22,11 @@ import org.apache.dubbo.remoting.Dispatcher;
 import org.apache.dubbo.remoting.exchange.support.header.HeartbeatHandler;
 import org.apache.dubbo.remoting.transport.MultiMessageHandler;
 
+/**
+ * ChannelHandlers
+ *
+ * @author allen.wu
+ */
 public class ChannelHandlers {
 
     private static ChannelHandlers INSTANCE = new ChannelHandlers();
@@ -41,8 +46,17 @@ public class ChannelHandlers {
         INSTANCE = instance;
     }
 
+    /**
+     * ChannelHandler 对象修饰
+     *
+     * @param handler handler
+     * @param url     url
+     * @return ChannelHandler
+     */
     protected ChannelHandler wrapInternal(ChannelHandler handler, URL url) {
-        return new MultiMessageHandler(new HeartbeatHandler(url.getOrDefaultFrameworkModel().getExtensionLoader(Dispatcher.class)
-                .getAdaptiveExtension().dispatch(handler, url)));
+        return new MultiMessageHandler(
+                new HeartbeatHandler(
+                        url.getOrDefaultFrameworkModel().getExtensionLoader(Dispatcher.class).getAdaptiveExtension()
+                                .dispatch(handler, url)));
     }
 }

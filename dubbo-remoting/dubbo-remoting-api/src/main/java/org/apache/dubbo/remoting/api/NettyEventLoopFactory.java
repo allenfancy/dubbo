@@ -16,9 +16,6 @@
  */
 package org.apache.dubbo.remoting.api;
 
-import org.apache.dubbo.common.resource.GlobalResourceInitializer;
-import org.apache.dubbo.remoting.Constants;
-
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
@@ -30,6 +27,9 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.DefaultThreadFactory;
+import io.netty.util.concurrent.EventExecutorGroup;
+import org.apache.dubbo.common.resource.GlobalResourceInitializer;
+import org.apache.dubbo.remoting.Constants;
 
 import java.util.concurrent.ThreadFactory;
 
@@ -37,13 +37,19 @@ import static org.apache.dubbo.common.constants.CommonConstants.OS_LINUX_PREFIX;
 import static org.apache.dubbo.common.constants.CommonConstants.OS_NAME_KEY;
 import static org.apache.dubbo.remoting.Constants.NETTY_EPOLL_ENABLE_KEY;
 
+/**
+ * netty event loop factory
+ *
+ * @author allen.wu
+ */
 public class NettyEventLoopFactory {
+
     /**
      * netty client bootstrap
      */
     public static final GlobalResourceInitializer<EventLoopGroup> NIO_EVENT_LOOP_GROUP = new GlobalResourceInitializer<>(() ->
-        eventLoopGroup(Constants.DEFAULT_IO_THREADS, "NettyClientWorker"),
-        eventLoopGroup -> eventLoopGroup.shutdownGracefully()
+            eventLoopGroup(Constants.DEFAULT_IO_THREADS, "NettyClientWorker"),
+            EventExecutorGroup::shutdownGracefully
     );
 
     public static EventLoopGroup eventLoopGroup(int threads, String threadFactoryName) {

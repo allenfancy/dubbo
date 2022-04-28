@@ -27,6 +27,9 @@ import static org.apache.dubbo.common.constants.CommonConstants.HEARTBEAT_EVENT;
 
 /**
  * HeartbeatTimerTask
+ * 心跳 timer task.
+ *
+ * @author allen.wu
  */
 public class HeartbeatTimerTask extends AbstractTimerTask {
 
@@ -47,6 +50,7 @@ public class HeartbeatTimerTask extends AbstractTimerTask {
             Long now = now();
             if ((lastRead != null && now - lastRead > heartbeat)
                     || (lastWrite != null && now - lastWrite > heartbeat)) {
+                // 最后一次读写时间超过心跳时间，就会发送心跳请求
                 Request req = new Request();
                 req.setVersion(Version.getProtocolVersion());
                 req.setTwoWay(true);

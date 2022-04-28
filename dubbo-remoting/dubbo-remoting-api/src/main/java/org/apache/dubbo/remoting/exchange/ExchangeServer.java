@@ -23,11 +23,14 @@ import java.util.Collection;
 
 /**
  * ExchangeServer. (API/SPI, Prototype, ThreadSafe)
+ *
+ * @author allen.wu
  */
 public interface ExchangeServer extends RemotingServer {
 
     /**
      * get channels.
+     * 获取Server端服务的所有channel
      *
      * @return channels
      */
@@ -35,8 +38,9 @@ public interface ExchangeServer extends RemotingServer {
 
     /**
      * get channel.
+     * 获取指定的channel
      *
-     * @param remoteAddress
+     * @param remoteAddress remoteAddress
      * @return channel
      */
     ExchangeChannel getExchangeChannel(InetSocketAddress remoteAddress);

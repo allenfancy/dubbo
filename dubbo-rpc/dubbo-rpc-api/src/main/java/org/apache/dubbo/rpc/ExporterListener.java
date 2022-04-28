@@ -21,24 +21,30 @@ import org.apache.dubbo.common.extension.SPI;
 
 /**
  * ExporterListener. (SPI, Singleton, ThreadSafe)
+ * provider端监听器：
+ * 为了监听服务发布事件以及取消暴露事件；用ExporterListener去实现
+ *
+ * @author allen.wu
  */
 @SPI(scope = ExtensionScope.FRAMEWORK)
 public interface ExporterListener {
 
     /**
      * The exporter exported.
+     * 当有服务发布的时候，会触发该方法
      *
-     * @param exporter
-     * @throws RpcException
+     * @param exporter exporter
+     * @throws RpcException rpc exception
      * @see org.apache.dubbo.rpc.Protocol#export(Invoker)
      */
     void exported(Exporter<?> exporter) throws RpcException;
 
     /**
      * The exporter unexported.
+     * 当有服务取消发布的时候，会触发该方法
      *
-     * @param exporter
-     * @throws RpcException
+     * @param exporter exporter
+     * @throws RpcException rpc exception
      * @see org.apache.dubbo.rpc.Exporter#unexport()
      */
     void unexported(Exporter<?> exporter);

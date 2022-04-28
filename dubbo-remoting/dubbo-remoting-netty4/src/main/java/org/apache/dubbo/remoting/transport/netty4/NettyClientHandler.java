@@ -16,6 +16,10 @@
  */
 package org.apache.dubbo.remoting.transport.netty4;
 
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
+import io.netty.handler.timeout.IdleStateEvent;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.Version;
 import org.apache.dubbo.common.logger.Logger;
@@ -25,22 +29,27 @@ import org.apache.dubbo.remoting.ChannelHandler;
 import org.apache.dubbo.remoting.exchange.Request;
 import org.apache.dubbo.remoting.exchange.Response;
 
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
-import io.netty.handler.timeout.IdleStateEvent;
-
 import static org.apache.dubbo.common.constants.CommonConstants.HEARTBEAT_EVENT;
 
 /**
  * NettyClientHandler
+ * netty client handler
+ *
+ * @author allen.wu
  */
 @io.netty.channel.ChannelHandler.Sharable
 public class NettyClientHandler extends ChannelDuplexHandler {
+
     private static final Logger logger = LoggerFactory.getLogger(NettyClientHandler.class);
 
+    /**
+     * url
+     */
     private final URL url;
 
+    /**
+     * dubbo channel handler
+     */
     private final ChannelHandler handler;
 
     public NettyClientHandler(URL url, ChannelHandler handler) {
@@ -86,7 +95,9 @@ public class NettyClientHandler extends ChannelDuplexHandler {
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         super.write(ctx, msg, promise);
+        // 1. 是否是netty channel.
         final NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
+        // 2. 是否请求消息
         final boolean isRequest = msg instanceof Request;
 
         // We add listeners to make sure our out bound event is correct.
@@ -110,7 +121,7 @@ public class NettyClientHandler extends ChannelDuplexHandler {
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        // send heartbeat when read idle.
+        // send heartbeat when read idle. 当空闲时，发送心跳消息
         if (evt instanceof IdleStateEvent) {
             try {
                 NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
@@ -120,6 +131,7 @@ public class NettyClientHandler extends ChannelDuplexHandler {
                 Request req = new Request();
                 req.setVersion(Version.getProtocolVersion());
                 req.setTwoWay(true);
+                // 发送心跳请求
                 req.setEvent(HEARTBEAT_EVENT);
                 channel.send(req);
             } finally {

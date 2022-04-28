@@ -18,13 +18,21 @@ package org.apache.dubbo.remoting;
 
 /**
  * Indicate whether the implementation (for both server and client) has the ability to sense and handle idle connection.
+ * 表示实现(对于服务器和客户机)是否具有感知和处理空闲连接的能力。
  * If the server has the ability to handle idle connection, it should close the connection when it happens, and if
  * the client has the ability to handle idle connection, it should send the heartbeat to the server.
+ * 如果服务器有能力处理空闲连接，它应该在连接发生时关闭连接，如果客户端有能力处理空闲连接，它应该向服务器发送心跳。
+ *
+ * @author allen.wu
  */
 public interface IdleSensible {
+
     /**
-     * Whether the implementation can sense and handle the idle connection. By default, it's false, the implementation
-     * relies on dedicated timer to take care of idle connection.
+     * Whether the implementation can sense and handle the idle connection.
+     * 实现是否能够感知并处理空闲连接。
+     * <p>
+     * By default, it's false, the implementation relies on dedicated timer to take care of idle connection.
+     * 默认为false，实现依赖于专用定时器来处理空闲连接。
      *
      * @return whether it has the ability to handle idle connection
      */

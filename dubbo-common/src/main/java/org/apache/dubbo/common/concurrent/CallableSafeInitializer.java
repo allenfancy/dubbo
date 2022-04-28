@@ -26,18 +26,29 @@ import java.util.function.Consumer;
  * <p>
  * A safe and lazy and removable initializer implementation that wraps a
  * {@code Callable} object.
+ * 一个安全的、惰性的、可移除的初始化器实现，它封装了一个{@code Callable}对象。
  * </p>
- * @see org.apache.commons.lang3.concurrent.AtomicSafeInitializer
+ *
+ * @author allen.wu
  */
 public class CallableSafeInitializer<T> {
-    /** A guard which ensures that initialize() is called only once. */
-    private final AtomicReference<CallableSafeInitializer<T>> factory =
-            new AtomicReference<>();
 
-    /** Holds the reference to the managed object. */
+    /**
+     * A guard which ensures that initialize() is called only once.
+     * 一个守卫，确保initialize()只被调用一次。
+     */
+    private final AtomicReference<CallableSafeInitializer<T>> factory = new AtomicReference<>();
+
+    /**
+     * Holds the reference to the managed object.
+     * 保存对管理对象的引用。
+     */
     private final AtomicReference<T> reference = new AtomicReference<>();
 
-    /** The Callable to be executed. */
+    /**
+     * The Callable to be executed.
+     * 要执行的Callable。
+     */
     private final Callable<T> callable;
 
     public CallableSafeInitializer(Callable<T> callable) {
@@ -46,11 +57,10 @@ public class CallableSafeInitializer<T> {
 
     /**
      * Get (and initialize, if not initialized yet) the required object
+     * 获取(并初始化，如果还没有初始化)所需的对象。
      *
-     * @return lazily initialized object
-     * exception
+     * @return lazily initialized object exception
      */
-    //@Override
     public final T get() {
         T result;
 
@@ -70,7 +80,7 @@ public class CallableSafeInitializer<T> {
      * the creation of the object. No synchronization is needed, as this is
      * already handled by {@code get()}. This method is guaranteed to be called
      * only once.
-     *
+     * 创建并初始化此{@code AtomicInitializer}管理的对象。
      * @return the managed data object
      */
     protected T initialize() {

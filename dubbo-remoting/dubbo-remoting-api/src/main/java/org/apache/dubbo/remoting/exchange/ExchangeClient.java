@@ -21,10 +21,15 @@ import org.apache.dubbo.remoting.Client;
 /**
  * ExchangeClient. (API/SPI, Prototype, ThreadSafe)
  *
- *
+ * @author allen.wu
  */
 public interface ExchangeClient extends Client, ExchangeChannel {
 
+    /**
+     * 关闭所有client端的连接
+     *
+     * @param timeout timeout
+     */
     default void closeAll(int timeout) {
         close(timeout);
     }

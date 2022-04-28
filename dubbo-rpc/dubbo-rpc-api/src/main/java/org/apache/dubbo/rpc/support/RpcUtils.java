@@ -32,18 +32,9 @@ import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static org.apache.dubbo.common.constants.CommonConstants.$INVOKE;
-import static org.apache.dubbo.common.constants.CommonConstants.$INVOKE_ASYNC;
-import static org.apache.dubbo.common.constants.CommonConstants.GENERIC_PARAMETER_DESC;
-import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_ATTACHMENT_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_ATTACHMENT_KEY_LOWER;
-import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.*;
 import static org.apache.dubbo.rpc.Constants.$ECHO;
-import static org.apache.dubbo.rpc.Constants.$ECHO_PARAMETER_DESC;
-import static org.apache.dubbo.rpc.Constants.ASYNC_KEY;
-import static org.apache.dubbo.rpc.Constants.AUTO_ATTACH_INVOCATIONID_KEY;
-import static org.apache.dubbo.rpc.Constants.ID_KEY;
-import static org.apache.dubbo.rpc.Constants.RETURN_KEY;
+import static org.apache.dubbo.rpc.Constants.*;
 
 /**
  * RpcUtils
@@ -215,11 +206,20 @@ public class RpcUtils {
         }
     }
 
+    /**
+     * 不需要关注返回值的请求
+     *
+     * @param url url
+     * @param inv inv
+     * @return if true, it means the request is not need to care about the return value
+     */
     public static boolean isOneway(URL url, Invocation inv) {
         boolean isOneway;
+        //1. 首先关注的是Invocation中"return"这个附加属性
         if (Boolean.FALSE.toString().equals(inv.getAttachment(RETURN_KEY))) {
             isOneway = true;
         } else {
+            // 2.再关注URL中，调用方法对应的"return"配置
             isOneway = !url.getMethodParameter(getMethodName(inv), RETURN_KEY, true);
         }
         return isOneway;
@@ -239,7 +239,7 @@ public class RpcUtils {
     public static long getTimeout(Invocation invocation, long defaultTimeout) {
         long timeout = defaultTimeout;
         Object genericTimeout = invocation.getObjectAttachmentWithoutConvert(TIMEOUT_ATTACHMENT_KEY);
-        if(genericTimeout == null) {
+        if (genericTimeout == null) {
             genericTimeout = invocation.getObjectAttachmentWithoutConvert(TIMEOUT_ATTACHMENT_KEY_LOWER);
         }
         if (genericTimeout != null) {

@@ -38,10 +38,17 @@ import static org.apache.dubbo.rpc.Constants.INTERFACES;
 
 /**
  * AbstractProxyFactory
+ * 代理对象的工厂类
+ *
+ * @author allen.wu
  */
 public abstract class AbstractProxyFactory implements ProxyFactory {
+
+    /**
+     * 内部接口
+     */
     private static final Class<?>[] INTERNAL_INTERFACES = new Class<?>[]{
-        EchoService.class, Destroyable.class
+            EchoService.class, Destroyable.class
     };
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractProxyFactory.class);
@@ -54,14 +61,19 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
     @Override
     public <T> T getProxy(Invoker<T> invoker, boolean generic) throws RpcException {
         // when compiling with native image, ensure that the order of the interfaces remains unchanged
+
+        // 1. 记录需要代理的接口
         LinkedHashSet<Class<?>> interfaces = new LinkedHashSet<>();
         ClassLoader classLoader = getClassLoader(invoker);
 
+        // 2. 获取URL中interfaces参数指定的接口
         String config = invoker.getUrl().getParameter(INTERFACES);
         if (StringUtils.isNotEmpty(config)) {
+            //3. 按照逗号切分interfaces参数，得到接口集合
             String[] types = COMMA_SPLIT_PATTERN.split(config);
             for (String type : types) {
                 try {
+                    // 3.1 记录接口信息
                     interfaces.add(ReflectUtils.forName(classLoader, type));
                 } catch (Throwable e) {
                     // ignore
@@ -73,7 +85,7 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
         Class<?> realInterfaceClass = null;
         if (generic) {
             try {
-                // find the real interface from url
+                // find the real interface from url 通过URL获取真实的接口类型
                 String realInterface = invoker.getUrl().getParameter(Constants.INTERFACE);
                 realInterfaceClass = ReflectUtils.forName(classLoader, realInterface);
                 interfaces.add(realInterfaceClass);
@@ -106,6 +118,13 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
         }
     }
 
+    /**
+     * 通过invoker对象获取类加载器
+     *
+     * @param invoker invoker
+     * @param <T>     T
+     * @return ClassLoader
+     */
     private <T> ClassLoader getClassLoader(Invoker<T> invoker) {
         ServiceModel serviceModel = invoker.getUrl().getServiceModel();
         ClassLoader classLoader = null;
@@ -122,6 +141,14 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
         return INTERNAL_INTERFACES.clone();
     }
 
+    /**
+     * 模板方法，交给子类去完成proxy的创建
+     *
+     * @param invoker invoker
+     * @param types   types
+     * @param <T>     T
+     * @return T
+     */
     public abstract <T> T getProxy(Invoker<T> invoker, Class<?>[] types);
 
 }

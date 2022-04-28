@@ -30,6 +30,7 @@ public class TelnetClientHandler implements Replier<String> {
         return String.class;
     }
 
+    @Override
     public Object reply(ExchangeChannel channel, String msg) throws RemotingException {
         return msg;
     }

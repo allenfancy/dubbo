@@ -25,7 +25,13 @@ import org.apache.dubbo.common.utils.UrlUtils;
 
 import java.util.List;
 
+/**
+ * 监听注册器包装类
+ *
+ * @author qian.lei
+ */
 public class ListenerRegistryWrapper implements Registry {
+
     private static final Logger logger = LoggerFactory.getLogger(ListenerRegistryWrapper.class);
 
     private final Registry registry;

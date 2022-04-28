@@ -32,12 +32,23 @@ import org.apache.dubbo.rpc.model.ApplicationModel;
 
 import java.util.concurrent.ExecutorService;
 
+/**
+ * ChannelHandler 包装类
+ *
+ * @author allen.wu
+ */
 public class WrappedChannelHandler implements ChannelHandlerDelegate {
 
     protected static final Logger logger = LoggerFactory.getLogger(WrappedChannelHandler.class);
 
+    /**
+     * channel handler
+     */
     protected final ChannelHandler handler;
 
+    /**
+     * url
+     */
     protected final URL url;
 
     public WrappedChannelHandler(ChannelHandler handler, URL url) {
@@ -101,11 +112,14 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
 
     /**
      * Currently, this method is mainly customized to facilitate the thread model on consumer side.
+     * 目前，该方法主要是定制化的，以方便用户端的线程模型。
      * 1. Use ThreadlessExecutor, aka., delegate callback directly to the thread initiating the call.
+     *  1.使用ThreadlessExecutor，将回调直接委托给初始化调用的线程。
      * 2. Use shared executor to execute the callback.
+     *  2.使用共享执行器执行回调。
      *
-     * @param msg
-     * @return
+     * @param msg msg
+     * @return ExecutorService
      */
     public ExecutorService getPreferredExecutorService(Object msg) {
         if (msg instanceof Response) {
@@ -114,7 +128,7 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
             // a typical scenario is the response returned after timeout, the timeout response may have completed the future
             if (responseFuture == null) {
                 return getSharedExecutorService();
-            } else {
+            } else { // 如果请求关联了线程池，则会获取相关的线程来处理响应
                 ExecutorService executor = responseFuture.getExecutor();
                 if (executor == null || executor.isShutdown()) {
                     executor = getSharedExecutorService();
@@ -122,6 +136,7 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
                 return executor;
             }
         } else {
+            // 如果是请求消息，则直接使用公共的线程池处理
             return getSharedExecutorService();
         }
     }
@@ -140,8 +155,7 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
 
         // note: url.getOrDefaultApplicationModel() may create new application model
         ApplicationModel applicationModel = url.getOrDefaultApplicationModel();
-        ExecutorRepository executorRepository =
-                applicationModel.getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
+        ExecutorRepository executorRepository = applicationModel.getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
         ExecutorService executor = executorRepository.getExecutor(url);
         if (executor == null) {
             executor = executorRepository.createExecutorIfAbsent(url);

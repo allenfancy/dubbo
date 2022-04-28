@@ -28,9 +28,15 @@ import java.util.Collection;
 
 /**
  * ExchangeServerDelegate
+ * exchange server 委托类
+ *
+ * @author allen.wu
  */
 public class ExchangeServerDelegate implements ExchangeServer {
 
+    /**
+     * exchange server.
+     */
     private transient ExchangeServer server;
 
     public ExchangeServerDelegate() {

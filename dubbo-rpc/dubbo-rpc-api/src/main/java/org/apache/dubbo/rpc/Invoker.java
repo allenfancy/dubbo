@@ -20,7 +20,9 @@ import org.apache.dubbo.common.Node;
 
 /**
  * Invoker. (API/SPI, Prototype, ThreadSafe)
+ * invoker .
  *
+ * @author allen
  * @see org.apache.dubbo.rpc.Protocol#refer(Class, org.apache.dubbo.common.URL)
  * @see org.apache.dubbo.rpc.InvokerListener
  * @see org.apache.dubbo.rpc.protocol.AbstractInvoker
@@ -29,6 +31,7 @@ public interface Invoker<T> extends Node {
 
     /**
      * get service interface.
+     * 获取服务接口
      *
      * @return service interface.
      */
@@ -36,15 +39,16 @@ public interface Invoker<T> extends Node {
 
     /**
      * invoke.
-     *
-     * @param invocation
+     * 进行一次调用，也有人称之为一次"会话"，你可以理解为一次调用
+     * @param invocation invocation
      * @return result
-     * @throws RpcException
+     * @throws RpcException rpc exception
      */
     Result invoke(Invocation invocation) throws RpcException;
 
     /**
      * destroy all
+     * 销毁
      */
     default void destroyAll() {
         destroy();

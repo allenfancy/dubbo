@@ -18,6 +18,7 @@ package org.apache.dubbo.remoting;
 import org.apache.dubbo.rpc.model.ScopeModel;
 import org.apache.dubbo.rpc.model.ScopeModelUtil;
 public class Dispatcher$Adaptive implements org.apache.dubbo.remoting.Dispatcher {
+@Override
 public org.apache.dubbo.remoting.ChannelHandler dispatch(org.apache.dubbo.remoting.ChannelHandler arg0, org.apache.dubbo.common.URL arg1)  {
 if (arg1 == null) throw new IllegalArgumentException("url == null");
 org.apache.dubbo.common.URL url = arg1;

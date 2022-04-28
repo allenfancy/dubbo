@@ -104,7 +104,9 @@ public class ConfigurationUtils {
      */
     @SuppressWarnings("deprecation")
     public static int getServerShutdownTimeout(ScopeModel scopeModel) {
+        // 1. 默认服务端关闭等待时间
         int timeout = DEFAULT_SERVER_SHUTDOWN_TIMEOUT;
+        // 2. 先从配置中心获取
         Configuration configuration = getGlobalConfiguration(scopeModel);
         String value = StringUtils.trim(configuration.getString(SHUTDOWN_WAIT_KEY));
 

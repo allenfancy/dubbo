@@ -54,6 +54,7 @@ public class MultipleRegistryCenterServiceDiscoveryRegistryRegistryServiceListen
                 .PROVIDER_APPLICATION_NAME);
     }
 
+    @Override
     public void onRegister(URL url, Registry registry) {
         if (registry instanceof ServiceDiscoveryRegistry && isCheckedApplication(registry)) {
             ServiceDiscoveryRegistry serviceDiscoveryRegistry = (ServiceDiscoveryRegistry) registry;
@@ -66,6 +67,7 @@ public class MultipleRegistryCenterServiceDiscoveryRegistryRegistryServiceListen
         }
     }
 
+    @Override
     public void onUnregister(URL url, Registry registry) {
         if (registry instanceof ServiceDiscoveryRegistry && isCheckedApplication(registry)) {
             String host = registry.getUrl().getHost();
@@ -74,6 +76,7 @@ public class MultipleRegistryCenterServiceDiscoveryRegistryRegistryServiceListen
         }
     }
 
+    @Override
     public void onSubscribe(URL url, Registry registry) {
         if (registry instanceof ServiceDiscoveryRegistry && isCheckedApplication(registry)) {
             ServiceDiscoveryRegistry serviceDiscoveryRegistry = (ServiceDiscoveryRegistry) registry;
@@ -86,6 +89,7 @@ public class MultipleRegistryCenterServiceDiscoveryRegistryRegistryServiceListen
         }
     }
 
+    @Override
     public void onUnsubscribe(URL url, Registry registry) {
         if (registry instanceof ServiceDiscoveryRegistry && isCheckedApplication(registry)) {
             String host = registry.getUrl().getHost();

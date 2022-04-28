@@ -31,8 +31,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 
 /**
- * Only request message will be dispatched to thread pool. Other messages like response, connect, disconnect,
- * heartbeat will be directly executed by I/O thread.
+ * Only request message will be dispatched to thread pool.
+ * 只有请求消息将被分派到线程池。
+ * Other messages like response, connect, disconnect,heartbeat will be directly executed by I/O thread.
+ * 其他消息如响应、连接、断开连接、心跳将直接由I/O线程执行。
+ * eg:
+ * 由ExecutionDispatcher创建只会将请求消息派发到线程池进行处理，也就是只重写了received()方法。
+ * 对于响应消息以及其他网络事件（例如，连接建立事件、连接断开事件、心跳消息等），ExecutionChannelHandler会直接在IO线程中进行处理
+ *
+ * @author allen.wu
+ * @date 2016/12/21
  */
 public class ExecutionChannelHandler extends WrappedChannelHandler {
 
@@ -44,6 +52,7 @@ public class ExecutionChannelHandler extends WrappedChannelHandler {
     public void received(Channel channel, Object message) throws RemotingException {
         ExecutorService executor = getPreferredExecutorService(message);
 
+        //  1. 如果是请求消息，则进行线程池处理
         if (message instanceof Request) {
             try {
                 executor.execute(new ChannelEventRunnable(channel, handler, ChannelState.RECEIVED, message));

@@ -234,6 +234,7 @@ public class HeaderExchangeHandlerTest {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public CompletableFuture<Object> reply(ExchangeChannel channel, Object request) throws RemotingException {
             throw new UnsupportedOperationException();
         }

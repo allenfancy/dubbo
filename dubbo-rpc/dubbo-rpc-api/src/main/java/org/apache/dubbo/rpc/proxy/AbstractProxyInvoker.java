@@ -22,14 +22,7 @@ import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.common.profiler.Profiler;
 import org.apache.dubbo.common.profiler.ProfilerEntry;
 import org.apache.dubbo.common.profiler.ProfilerSwitch;
-import org.apache.dubbo.rpc.AppResponse;
-import org.apache.dubbo.rpc.AsyncContextImpl;
-import org.apache.dubbo.rpc.AsyncRpcResult;
-import org.apache.dubbo.rpc.Invocation;
-import org.apache.dubbo.rpc.Invoker;
-import org.apache.dubbo.rpc.Result;
-import org.apache.dubbo.rpc.RpcContext;
-import org.apache.dubbo.rpc.RpcException;
+import org.apache.dubbo.rpc.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.CompletableFuture;
@@ -39,6 +32,14 @@ import static org.apache.dubbo.common.constants.CommonConstants.PROVIDER_ASYNC_K
 
 /**
  * This Invoker works on provider side, delegates RPC to interface implementation.
+ * 此Invoker工作在服务端，将RPC委托给接口实现。
+ * <p>
+ *  业务接口实现会被包装成此对象，并由exporter暴露出去，让consumer端消费该服务。
+ * </p>
+ * Exporter 暴露 Invoker 的实现,让 Provider 能够根据请求的各种信息，找到对应的 Invoker
+ * @author allen.wu
+ *
+ * @link AbstractInvoker工作在消费端
  */
 public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
     Logger logger = LoggerFactory.getLogger(AbstractProxyInvoker.class);
@@ -87,7 +88,7 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
     public Result invoke(Invocation invocation) throws RpcException {
         try {
             ProfilerEntry originEntry = null;
-            if (ProfilerSwitch.isEnableSimpleProfiler()) {
+            if (ProfilerSwitch.getEnableSimpleProfiler()) {
                 Object fromInvocation = invocation.get(Profiler.PROFILER_KEY);
                 if (fromInvocation instanceof ProfilerEntry) {
                     ProfilerEntry profiler = Profiler.enter((ProfilerEntry) fromInvocation, "Receive request. Server biz impl invoke begin.");
@@ -98,7 +99,7 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
 
             Object value = doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
 
-            if (ProfilerSwitch.isEnableSimpleProfiler()) {
+            if (ProfilerSwitch.getEnableSimpleProfiler()) {
                 Object fromInvocation = invocation.get(Profiler.PROFILER_KEY);
                 if (fromInvocation instanceof ProfilerEntry) {
                     ProfilerEntry profiler = Profiler.release((ProfilerEntry) fromInvocation);

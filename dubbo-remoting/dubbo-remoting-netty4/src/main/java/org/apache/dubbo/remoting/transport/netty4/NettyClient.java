@@ -16,6 +16,13 @@
  */
 package org.apache.dubbo.remoting.transport.netty4;
 
+import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.*;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.proxy.Socks5ProxyHandler;
+import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.concurrent.EventExecutorGroup;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.Version;
 import org.apache.dubbo.common.config.ConfigurationUtils;
@@ -31,17 +38,6 @@ import org.apache.dubbo.remoting.api.SslClientTlsHandler;
 import org.apache.dubbo.remoting.transport.AbstractClient;
 import org.apache.dubbo.remoting.utils.UrlUtils;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.proxy.Socks5ProxyHandler;
-import io.netty.handler.timeout.IdleStateHandler;
-
 import java.net.InetSocketAddress;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -52,6 +48,9 @@ import static org.apache.dubbo.remoting.api.NettyEventLoopFactory.socketChannelC
 
 /**
  * NettyClient.
+ * netty client
+ *
+ * @author allen.wu
  */
 public class NettyClient extends AbstractClient {
 
@@ -65,10 +64,11 @@ public class NettyClient extends AbstractClient {
 
     /**
      * netty client bootstrap
+     * netty 客户端 bootstrap ；GlobalResourceInitializer.getResource()
      */
     private static final GlobalResourceInitializer<EventLoopGroup> EVENT_LOOP_GROUP = new GlobalResourceInitializer<>(() ->
-        eventLoopGroup(Constants.DEFAULT_IO_THREADS, "NettyClientWorker"),
-        eventLoopGroup -> eventLoopGroup.shutdownGracefully());
+            eventLoopGroup(Constants.DEFAULT_IO_THREADS, "NettyClientWorker"),
+            EventExecutorGroup::shutdownGracefully);
 
     private Bootstrap bootstrap;
 
@@ -96,8 +96,11 @@ public class NettyClient extends AbstractClient {
      */
     @Override
     protected void doOpen() throws Throwable {
+        // 1. 创建NettyClientHandler
         final NettyClientHandler nettyClientHandler = createNettyClientHandler();
+        // 2. new bootstrap
         bootstrap = new Bootstrap();
+        // 3. init bootstrap
         initBootstrap(nettyClientHandler);
     }
 
@@ -106,33 +109,40 @@ public class NettyClient extends AbstractClient {
     }
 
     protected void initBootstrap(NettyClientHandler nettyClientHandler) {
+        // 设置socketChannel的类型
         bootstrap.group(EVENT_LOOP_GROUP.get())
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                //.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, getTimeout())
                 .channel(socketChannelClass());
 
+        // 1. 设置连接超时时间，这里使用到AbstractEndpoint中的connectTimeout字段
         bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Math.max(DEFAULT_CONNECT_TIMEOUT, getConnectTimeout()));
+        // 2. 设置channel handler
         bootstrap.handler(new ChannelInitializer<SocketChannel>() {
 
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
+                // 2.1 获取心跳间隔时间
                 int heartbeatInterval = UrlUtils.getHeartbeat(getUrl());
 
+                // 2.2 设置SSL
                 if (getUrl().getParameter(SSL_ENABLED_KEY, false)) {
                     ch.pipeline().addLast("negotiation", new SslClientTlsHandler(getUrl()));
                 }
 
+                // 2.3 设置NettyCodecAdapter
                 NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyClient.this);
+                // 2.4 注册ChannelHandler
                 ch.pipeline()//.addLast("logging",new LoggingHandler(LogLevel.INFO))//for debug
                         .addLast("decoder", adapter.getDecoder())
                         .addLast("encoder", adapter.getEncoder())
                         .addLast("client-idle-handler", new IdleStateHandler(heartbeatInterval, 0, 0, MILLISECONDS))
                         .addLast("handler", nettyClientHandler);
 
+                // 2.5 设置SOCKS代理
                 String socksProxyHost = ConfigurationUtils.getProperty(getUrl().getOrDefaultApplicationModel(), SOCKS_PROXY_HOST);
-                if(socksProxyHost != null && !isFilteredAddress(getUrl().getHost())) {
+                if (socksProxyHost != null && !isFilteredAddress(getUrl().getHost())) {
                     int socksProxyPort = Integer.parseInt(ConfigurationUtils.getProperty(getUrl().getOrDefaultApplicationModel(), SOCKS_PROXY_PORT, DEFAULT_SOCKS_PROXY_PORT));
                     Socks5ProxyHandler socks5ProxyHandler = new Socks5ProxyHandler(new InetSocketAddress(socksProxyHost, socksProxyPort));
                     ch.pipeline().addFirst(socks5ProxyHandler);
@@ -142,11 +152,8 @@ public class NettyClient extends AbstractClient {
     }
 
     private boolean isFilteredAddress(String host) {
-        // filter local address
-        if (StringUtils.isEquals(NetUtils.getLocalHost(), host) || NetUtils.isLocalHost(host)) {
-            return true;
-        }
-        return false;
+        // filter local address 过滤本地地址
+        return StringUtils.isEquals(NetUtils.getLocalHost(), host) || NetUtils.isLocalHost(host);
     }
 
     @Override

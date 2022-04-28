@@ -24,23 +24,46 @@ import static org.apache.dubbo.common.constants.CommonConstants.REGISTRY_DELAY_N
 
 /**
  * Registry. (SPI, Prototype, ThreadSafe)
+ * Registry就是一个拥有注册中心能力的节点
  *
+ * @author qian.lei
  * @see org.apache.dubbo.registry.RegistryFactory#getRegistry(URL)
  * @see org.apache.dubbo.registry.support.AbstractRegistry
  */
 public interface Registry extends Node, RegistryService {
+
+    /**
+     * 获取延时注册的时间间隔
+     *
+     * @return 默认5000
+     */
     default int getDelay() {
         return getUrl().getParameter(REGISTRY_DELAY_NOTIFICATION_KEY, DEFAULT_DELAY_NOTIFICATION_TIME);
     }
 
+    /**
+     * 是否是服务发现
+     *
+     * @return boolean
+     */
     default boolean isServiceDiscovery() {
         return false;
     }
 
+    /**
+     * 重新暴露注册，委托给RegisterService接口中的方法
+     *
+     * @param url url
+     */
     default void reExportRegister(URL url) {
         register(url);
     }
 
+    /**
+     * 重新取消注册，委托给RegisterService接口中的方法
+     *
+     * @param url url
+     */
     default void reExportUnregister(URL url) {
         unregister(url);
     }

@@ -43,20 +43,45 @@ import java.lang.reflect.Type;
 import static org.apache.dubbo.rpc.Constants.SERIALIZATION_ID_KEY;
 import static org.apache.dubbo.rpc.Constants.SERIALIZATION_SECURITY_CHECK_KEY;
 
+/**
+ * Decode able rpc result.
+ * <p>
+ * 表示的是一个可编解码的响应结果
+ *
+ * @author allen.wu
+ */
 public class DecodeableRpcResult extends AppResponse implements Codec, Decodeable {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeableRpcResult.class);
 
-    private Channel channel;
+    /**
+     * dubbo channel.
+     */
+    private final Channel channel;
 
-    private byte serializationType;
+    /**
+     * 序列化方式
+     */
+    private final byte serializationType;
 
-    private InputStream inputStream;
+    /**
+     * 输入流
+     */
+    private final InputStream inputStream;
 
-    private Response response;
+    /**
+     * 响应
+     */
+    private final Response response;
 
-    private Invocation invocation;
+    /**
+     * 此次 RPC 调用关联的 Invocation 对象
+     */
+    private final Invocation invocation;
 
+    /**
+     * 是否已解码
+     */
     private volatile boolean hasDecoded;
 
     public DecodeableRpcResult(Channel channel, Response response, InputStream is, Invocation invocation, byte id) {

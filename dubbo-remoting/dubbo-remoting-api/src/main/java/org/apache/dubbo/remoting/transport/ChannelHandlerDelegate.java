@@ -18,6 +18,17 @@ package org.apache.dubbo.remoting.transport;
 
 import org.apache.dubbo.remoting.ChannelHandler;
 
+/**
+ * Channel handler 委托类
+ *
+ * @author allen.wu
+ */
 public interface ChannelHandlerDelegate extends ChannelHandler {
+
+    /**
+     * 获取channel handler
+     *
+     * @return channel handler
+     */
     ChannelHandler getHandler();
 }

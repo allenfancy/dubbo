@@ -31,13 +31,7 @@ import org.apache.dubbo.remoting.Decodeable;
 import org.apache.dubbo.remoting.exchange.Request;
 import org.apache.dubbo.remoting.transport.CodecSupport;
 import org.apache.dubbo.rpc.RpcInvocation;
-import org.apache.dubbo.rpc.model.ApplicationModel;
-import org.apache.dubbo.rpc.model.FrameworkModel;
-import org.apache.dubbo.rpc.model.FrameworkServiceRepository;
-import org.apache.dubbo.rpc.model.MethodDescriptor;
-import org.apache.dubbo.rpc.model.ModuleModel;
-import org.apache.dubbo.rpc.model.ProviderModel;
-import org.apache.dubbo.rpc.model.ServiceDescriptor;
+import org.apache.dubbo.rpc.model.*;
 import org.apache.dubbo.rpc.support.RpcUtils;
 
 import java.io.IOException;
@@ -49,30 +43,54 @@ import java.util.Map;
 
 import static org.apache.dubbo.common.BaseServiceMetadata.keyWithoutGroup;
 import static org.apache.dubbo.common.URL.buildKey;
-import static org.apache.dubbo.common.constants.CommonConstants.DUBBO_VERSION_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.PATH_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.*;
 import static org.apache.dubbo.rpc.Constants.SERIALIZATION_ID_KEY;
 import static org.apache.dubbo.rpc.Constants.SERIALIZATION_SECURITY_CHECK_KEY;
 
+/**
+ * Decode rpc invocation
+ * 表示的是一个可编解码的请求
+ *
+ * @author allen.wu
+ */
 public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Decodeable {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeableRpcInvocation.class);
 
-    private Channel channel;
+    /**
+     * Channel
+     */
+    private final Channel channel;
 
-    private byte serializationType;
+    /**
+     * 序列化类型
+     */
+    private final byte serializationType;
 
-    private InputStream inputStream;
+    /**
+     * 输入流
+     */
+    private final InputStream inputStream;
 
-    private Request request;
+    /**
+     * 请求对象
+     */
+    private final Request request;
 
+    /**
+     * 是否已解码
+     */
     private volatile boolean hasDecoded;
 
+    /**
+     * framework model
+     */
     protected final FrameworkModel frameworkModel;
 
-    private CallbackServiceCodec callbackServiceCodec;
+    /**
+     * 回调服务解码
+     */
+    private final CallbackServiceCodec callbackServiceCodec;
 
     public DecodeableRpcInvocation(FrameworkModel frameworkModel, Channel channel, Request request, InputStream is, byte id) {
         this.frameworkModel = frameworkModel;
@@ -115,7 +133,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
     @Override
     public Object decode(Channel channel, InputStream input) throws IOException {
         ObjectInput in = CodecSupport.getSerialization(channel.getUrl(), serializationType)
-            .deserialize(channel.getUrl(), input);
+                .deserialize(channel.getUrl(), input);
         this.put(SERIALIZATION_ID_KEY, serializationType);
 
         String dubboVersion = in.readUTF();
@@ -140,9 +158,6 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
             Object[] args = DubboCodec.EMPTY_OBJECT_ARRAY;
             Class<?>[] pts = DubboCodec.EMPTY_CLASS_ARRAY;
             if (desc.length() > 0) {
-//                if (RpcUtils.isGenericCall(path, getMethodName()) || RpcUtils.isEcho(path, getMethodName())) {
-//                    pts = ReflectUtils.desc2classArray(desc);
-//                } else {
                 FrameworkServiceRepository repository = frameworkModel.getServiceRepository();
                 List<ProviderModel> providerModels = repository.lookupExportedServicesWithoutGroup(keyWithoutGroup(path, version));
                 ServiceDescriptor serviceDescriptor = null;
@@ -232,8 +247,8 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
 
             setArguments(args);
             String targetServiceName = buildKey(getAttachment(PATH_KEY),
-                getAttachment(GROUP_KEY),
-                getAttachment(VERSION_KEY));
+                    getAttachment(GROUP_KEY),
+                    getAttachment(VERSION_KEY));
             setTargetServiceUniqueName(targetServiceName);
         } catch (ClassNotFoundException e) {
             throw new IOException(StringUtils.toString("Read invocation data failed.", e));

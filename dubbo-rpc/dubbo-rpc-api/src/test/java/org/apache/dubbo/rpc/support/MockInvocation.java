@@ -58,6 +58,7 @@ public class MockInvocation extends RpcInvocation {
         return null;
     }
 
+    @Override
     public String getMethodName() {
         return "echo";
     }
@@ -67,14 +68,17 @@ public class MockInvocation extends RpcInvocation {
         return "DemoService";
     }
 
+    @Override
     public Class<?>[] getParameterTypes() {
         return new Class[]{String.class};
     }
 
+    @Override
     public Object[] getArguments() {
         return new Object[]{"aa"};
     }
 
+    @Override
     public Map<String, String> getAttachments() {
         return new AttachmentsAdapter.ObjectToStringMap(attachments);
     }
@@ -114,6 +118,7 @@ public class MockInvocation extends RpcInvocation {
         attachments.put(key, value);
     }
 
+    @Override
     public Invoker<?> getInvoker() {
         return null;
     }
@@ -143,6 +148,7 @@ public class MockInvocation extends RpcInvocation {
         return null;
     }
 
+    @Override
     public String getAttachment(String key) {
         return (String) getObjectAttachments().get(key);
     }
@@ -152,6 +158,7 @@ public class MockInvocation extends RpcInvocation {
         return attachments.get(key);
     }
 
+    @Override
     public String getAttachment(String key, String defaultValue) {
         return (String) getObjectAttachments().get(key);
     }

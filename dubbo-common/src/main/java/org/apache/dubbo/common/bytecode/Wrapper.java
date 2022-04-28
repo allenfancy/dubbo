@@ -16,23 +16,17 @@
  */
 package org.apache.dubbo.common.bytecode;
 
-import org.apache.dubbo.common.utils.ClassUtils;
-import org.apache.dubbo.common.utils.ReflectUtils;
-
 import javassist.ClassPool;
 import javassist.CtMethod;
 import javassist.LoaderClassPath;
+import org.apache.dubbo.common.utils.ClassUtils;
+import org.apache.dubbo.common.utils.ReflectUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
@@ -40,9 +34,16 @@ import java.util.stream.Collectors;
 
 /**
  * Wrapper.
+ * 本身是抽象类，是对 Java 类的一种包装。Wrapper 会从 Java 类中的字段和方法抽象出相应 propertyName 和 methodName，
+ * 在需要调用一个字段或方法的时候，会根据传入的方法名和参数进行匹配，找到对应的字段和方法进行调用
+ *
+ * @author allen
  */
 public abstract class Wrapper {
-    private static final Map<Class<?>, Wrapper> WRAPPER_MAP = new ConcurrentHashMap<Class<?>, Wrapper>(); //class wrapper map
+    /**
+     * class wrapper map
+     */
+    private static final Map<Class<?>, Wrapper> WRAPPER_MAP = new ConcurrentHashMap<Class<?>, Wrapper>();
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private static final String[] OBJECT_METHODS = new String[]{"getClass", "hashCode", "toString", "equals"};
     private static final Wrapper OBJECT_WRAPPER = new Wrapper() {
@@ -101,7 +102,7 @@ public abstract class Wrapper {
             throw new NoSuchMethodException("Method [" + mn + "] not found.");
         }
     };
-    private static AtomicLong WRAPPER_CLASS_COUNTER = new AtomicLong(0);
+    private static final AtomicLong WRAPPER_CLASS_COUNTER = new AtomicLong(0);
 
     /**
      * get wrapper.
@@ -171,9 +172,9 @@ public abstract class Wrapper {
         }
 
         Method[] methods = Arrays.stream(c.getMethods())
-                                 .filter(method -> allMethod.contains(ReflectUtils.getDesc(method)))
-                                 .collect(Collectors.toList())
-                                 .toArray(new Method[] {});
+                .filter(method -> allMethod.contains(ReflectUtils.getDesc(method)))
+                .collect(Collectors.toList())
+                .toArray(new Method[]{});
         // get all public method.
         boolean hasMethod = ClassUtils.hasMethods(methods);
         if (hasMethod) {

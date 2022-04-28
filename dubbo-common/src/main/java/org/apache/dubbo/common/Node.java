@@ -18,11 +18,15 @@ package org.apache.dubbo.common;
 
 /**
  * Node. (API/SPI, Prototype, ThreadSafe)
+ * Node不仅可以表示 Provider 和 Consumer 节点，还可以表示注册中心节点
+ *
+ * @author qian.lei
  */
 public interface Node {
 
     /**
      * get url.
+     * 表示当前节点的 URL
      *
      * @return url.
      */
@@ -30,6 +34,7 @@ public interface Node {
 
     /**
      * is available.
+     * 检测当前节点是否可用
      *
      * @return available.
      */
@@ -37,6 +42,7 @@ public interface Node {
 
     /**
      * destroy.
+     * 负责销毁当前节点并释放底层资源
      */
     void destroy();
 

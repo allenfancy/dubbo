@@ -28,18 +28,18 @@ import org.apache.dubbo.remoting.transport.dispatcher.ChannelEventRunnable;
 import org.apache.dubbo.remoting.transport.dispatcher.ChannelEventRunnable.ChannelState;
 import org.apache.dubbo.remoting.transport.dispatcher.WrappedChannelHandler;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_THREAD_NAME;
 import static org.apache.dubbo.common.constants.CommonConstants.THREAD_NAME_KEY;
-import static org.apache.dubbo.remoting.Constants.CONNECT_QUEUE_CAPACITY;
-import static org.apache.dubbo.remoting.Constants.CONNECT_QUEUE_WARNING_SIZE;
-import static org.apache.dubbo.remoting.Constants.DEFAULT_CONNECT_QUEUE_WARNING_SIZE;
+import static org.apache.dubbo.remoting.Constants.*;
 
+/**
+ * 由 ConnectionOrderedDispatcher 创建）会将收到的消息交给线程池进行处理，对于连接建立以及断开事件，会提交到一个独立的线程池并排队进行处理。
+ * 在 ConnectionOrderedChannelHandler 的构造方法中，会初始化一个线程池，该线程池的队列长度是固定的
+ *
+ * @author allen.wu
+ */
 public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
 
     protected final ThreadPoolExecutor connectionExecutor;
@@ -48,12 +48,15 @@ public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
     public ConnectionOrderedChannelHandler(ChannelHandler handler, URL url) {
         super(handler, url);
         String threadName = url.getParameter(THREAD_NAME_KEY, DEFAULT_THREAD_NAME);
+        //  注意，该线程池只有一个线程，队列的长度也是固定的，队列长度是由 ConnectionOrderedDispatcher 的配置决定的
+        // 如果队列长度由由URL中的connect.queue.capacity参数指定
         connectionExecutor = new ThreadPoolExecutor(1, 1,
                 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<Runnable>(url.getPositiveParameter(CONNECT_QUEUE_CAPACITY, Integer.MAX_VALUE)),
                 new NamedThreadFactory(threadName, true),
                 new AbortPolicyWithReport(threadName, url)
-        );  // FIXME There's no place to release connectionExecutor!
+        );
+        // connect.queue.warning.size 参数用于提醒用户，当队列长度超过该值时，会输出警告日志
         queueWarningLimit = url.getParameter(CONNECT_QUEUE_WARNING_SIZE, DEFAULT_CONNECT_QUEUE_WARNING_SIZE);
     }
 
@@ -102,6 +105,7 @@ public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
     }
 
     private void checkQueueLength() {
+        // 告警
         if (connectionExecutor.getQueue().size() > queueWarningLimit) {
             logger.warn(new IllegalThreadStateException("connectionordered channel handler queue size: " + connectionExecutor.getQueue().size() + " exceed the warning limit number :" + queueWarningLimit));
         }

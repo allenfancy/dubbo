@@ -23,22 +23,25 @@ import java.util.Collection;
 
 /**
  * Remoting Server. (API/SPI, Prototype, ThreadSafe)
+ * 远程 remoting server.
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Client%E2%80%93server_model">Client/Server</a>
  *
+ * @author allen.wu
  * @see org.apache.dubbo.remoting.Transporter#bind(org.apache.dubbo.common.URL, ChannelHandler)
  */
 public interface RemotingServer extends Endpoint, Resetable, IdleSensible {
 
     /**
      * is bound.
-     *
+     * 是否绑定
      * @return bound
      */
     boolean isBound();
 
     /**
      * get channels.
+     * 获取Server端服务的所有Channel
      *
      * @return channels
      */
@@ -46,12 +49,17 @@ public interface RemotingServer extends Endpoint, Resetable, IdleSensible {
 
     /**
      * get channel.
+     * 获取指定的Channel
      *
-     * @param remoteAddress
+     * @param remoteAddress remoteAddress
      * @return channel
      */
     Channel getChannel(InetSocketAddress remoteAddress);
 
+    /**
+     * 重置
+     * @param parameters
+     */
     @Deprecated
     void reset(org.apache.dubbo.common.Parameters parameters);
 

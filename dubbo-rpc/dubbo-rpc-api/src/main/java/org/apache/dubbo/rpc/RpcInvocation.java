@@ -19,72 +19,106 @@ package org.apache.dubbo.rpc;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.utils.ReflectUtils;
 import org.apache.dubbo.common.utils.StringUtils;
-import org.apache.dubbo.rpc.model.FrameworkModel;
-import org.apache.dubbo.rpc.model.MethodDescriptor;
-import org.apache.dubbo.rpc.model.ProviderModel;
-import org.apache.dubbo.rpc.model.ServiceDescriptor;
-import org.apache.dubbo.rpc.model.ServiceModel;
+import org.apache.dubbo.rpc.model.*;
 import org.apache.dubbo.rpc.support.RpcUtils;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
-import static org.apache.dubbo.common.constants.CommonConstants.APPLICATION_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.PATH_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.*;
 import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 
 /**
  * RPC Invocation.
+ * 通过读写这些字段即可实现 Invocation 接口的全部方法
  *
+ * @author allen
  * @serial Don't change the class name and properties.
  */
 public class RpcInvocation implements Invocation, Serializable {
 
     private static final long serialVersionUID = -4355285085441097045L;
 
+    /**
+     * 要调用的唯一服务名称，其实就是 ServiceKey，
+     * 即 interface/group:version 三部分构成的字符串
+     */
     private String targetServiceUniqueName;
+
+    /**
+     * 协议KEY
+     */
     private String protocolServiceKey;
 
+    /**
+     * service model;dubbo 3.0
+     */
     private ServiceModel serviceModel;
 
+    /**
+     * 调用的目标方法名称
+     */
     private String methodName;
 
+    /**
+     * 接口名称
+     */
     private String interfaceName;
 
+    /**
+     * 记录了目标方法的全部参数类型。
+     */
     private transient Class<?>[] parameterTypes;
+
+    /**
+     * 参数列表签名
+     */
     private String parameterTypesDesc;
+
+    /**
+     *
+     */
     private String[] compatibleParamSignatures;
 
+    /**
+     * 具体参数值
+     */
     private Object[] arguments;
 
     /**
      * Passed to the remote server during RPC call
+     * 此次调用的附加信息，可以被序列化到请求中
      */
     private Map<String, Object> attachments;
 
     /**
      * Only used on the caller side, will not appear on the wire.
+     * 此次调用的属性信息，这些信息不能被发送出去，只能在调用方使用
      */
     private transient Map<Object, Object> attributes = Collections.synchronizedMap(new HashMap<>());
 
+    /**
+     * 此次调用关联的 Invoker 对象。
+     */
     private transient Invoker<?> invoker;
 
+    /**
+     * 返回值的类型。
+     */
     private transient Class<?> returnType;
 
+    /**
+     * 返回值的类型集合
+     */
     private transient Type[] returnTypes;
 
+    /**
+     * 此次调用的模式，分为 SYNC、ASYNC 和 FUTURE 三类
+     */
     private transient InvokeMode invokeMode;
 
     public RpcInvocation() {
@@ -192,16 +226,16 @@ public class RpcInvocation implements Invocation, Serializable {
         AtomicReference<ServiceDescriptor> serviceDescriptor = new AtomicReference<>();
         if (serviceModel != null) {
             serviceDescriptor.set(serviceModel.getServiceModel());
-        } else if (StringUtils.isNotEmpty(interfaceName)){
+        } else if (StringUtils.isNotEmpty(interfaceName)) {
             // TODO: Multi Instance compatible mode
             FrameworkModel.defaultModel()
-                .getServiceRepository()
-                .allProviderModels()
-                .stream()
-                .map(ProviderModel::getServiceModel)
-                .filter(s-> interfaceName.equals(s.getInterfaceName()))
-                .findFirst()
-                .ifPresent(serviceDescriptor::set);
+                    .getServiceRepository()
+                    .allProviderModels()
+                    .stream()
+                    .map(ProviderModel::getServiceModel)
+                    .filter(s -> interfaceName.equals(s.getInterfaceName()))
+                    .findFirst()
+                    .ifPresent(serviceDescriptor::set);
         }
 
         if (serviceDescriptor.get() != null) {

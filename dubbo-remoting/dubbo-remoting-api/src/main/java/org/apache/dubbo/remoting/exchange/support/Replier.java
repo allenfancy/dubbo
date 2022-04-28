@@ -21,16 +21,19 @@ import org.apache.dubbo.remoting.exchange.ExchangeChannel;
 
 /**
  * Replier. (API, Prototype, ThreadSafe)
+ * replier is used to reply the request.
+ *
+ * @author allen.wu
  */
 public interface Replier<T> {
 
     /**
      * reply.
      *
-     * @param channel
-     * @param request
+     * @param channel channel
+     * @param request request
      * @return response
-     * @throws RemotingException
+     * @throws RemotingException remoting exception
      */
     Object reply(ExchangeChannel channel, T request) throws RemotingException;
 

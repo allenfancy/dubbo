@@ -23,13 +23,22 @@ import org.apache.dubbo.rpc.Invoker;
 
 /**
  * AbstractExporter.
+ * 抽象的暴露实现，实现一些通用的能力
+ *
+ * @author allen.wu
  */
 public abstract class AbstractExporter<T> implements Exporter<T> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    /**
+     * invoker
+     */
     private final Invoker<T> invoker;
 
+    /**
+     * 是否取消注册
+     */
     private volatile boolean unexported = false;
 
     public AbstractExporter(Invoker<T> invoker) {
@@ -62,6 +71,7 @@ public abstract class AbstractExporter<T> implements Exporter<T> {
 
     /**
      * subclasses need to override this method to destroy resources.
+     * 子类去实现具体资源的销毁操作
      */
     public void afterUnExport() {
     }

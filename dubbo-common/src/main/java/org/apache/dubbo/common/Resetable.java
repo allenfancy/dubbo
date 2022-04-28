@@ -18,13 +18,15 @@ package org.apache.dubbo.common;
 
 /**
  * Resetable.
+ *
+ * @author allen.wu
  */
 public interface Resetable {
 
     /**
      * reset.
      *
-     * @param url
+     * @param url url
      */
     void reset(URL url);
 

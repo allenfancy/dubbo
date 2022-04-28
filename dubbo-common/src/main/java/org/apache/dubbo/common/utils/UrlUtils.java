@@ -382,6 +382,17 @@ public class UrlUtils {
         }
     }
 
+    /**
+     * consumer url和provider url的匹配规则：
+     * 1. 匹配consumer 和provider的接口(优先取interface参数，其次再取path).双方接口相同或者一方为*，则匹配成功，执行下一步.
+     * 2. 匹配consumer 和 provider的category
+     * 3. 检测 consumer url和 provider url中的参数是否符合条件
+     * 4. 检测consumer 和 provider端的group、version以及classifier是否符合条件
+     *
+     * @param consumerUrl consumer url
+     * @param providerUrl provider url
+     * @return true:匹配，false:不匹配
+     */
     public static boolean isMatch(URL consumerUrl, URL providerUrl) {
         String consumerInterface = consumerUrl.getServiceInterface();
         String providerInterface = providerUrl.getServiceInterface();

@@ -24,21 +24,47 @@ import static org.apache.dubbo.common.constants.CommonConstants.HEARTBEAT_EVENT;
 
 /**
  * Request.
+ *
+ * @author allen.wu
  */
 public class Request {
 
+    /**
+     * 用于生成请求的自增ID，当递增到Long.MAX_VALUE之后，会溢出到Long.MIN_VALUE，我们可以继续使用该负数作为消息ID
+     */
     private static final AtomicLong INVOKE_ID = new AtomicLong(0);
 
+    /**
+     * 请求的ID 可以用于追踪请求
+     */
     private final long mId;
 
+    /**
+     *请求版本号
+     */
     private String mVersion;
 
+    /**
+     * 请求的双向标识;
+     * 如果该字段设置为true，则Server端在收到请求后，需要给Client返回一个响应,
+     * 如果该字段设置为false，则Server端不需要给Client返回响应
+     */
     private boolean mTwoWay = true;
 
+    /**
+     * 事件标识:例如心跳请求、只读请求等，都会带有这个标识
+     */
     private boolean mEvent = false;
 
+    /**
+     * 请求发送到Server之后，由Decoder将二进制数据解码成Request对象;
+     * 如果解码环节遇到异常，则会设置该标识，然后交由其他ChannelHandler根据该标识做进一步处理
+     */
     private boolean mBroken = false;
 
+    /**
+     * 请求体，可以是任何Java类型的对象,也可以是null
+     */
     private Object mData;
 
     public Request() {
@@ -137,7 +163,7 @@ public class Request {
         return copy;
     }
 
-    public Request copyWithoutData(){
+    public Request copyWithoutData() {
         Request copy = new Request(mId);
         copy.mVersion = this.mVersion;
         copy.mTwoWay = this.mTwoWay;

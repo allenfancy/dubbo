@@ -26,6 +26,11 @@ import org.apache.dubbo.remoting.RemotingException;
 import org.apache.dubbo.remoting.exchange.Request;
 import org.apache.dubbo.remoting.exchange.Response;
 
+/**
+ * Decode Handler for Dubbo Protocol
+ *
+ * @author allen.wu
+ */
 public class DecodeHandler extends AbstractChannelHandlerDelegate {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeHandler.class);
@@ -36,18 +41,21 @@ public class DecodeHandler extends AbstractChannelHandlerDelegate {
 
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
+        // 1. 如果消息是decodeable，则调用decode方法
         if (message instanceof Decodeable) {
             decode(message);
         }
 
+        // 2. 如果消息是Request，则进行decode
         if (message instanceof Request) {
             decode(((Request) message).getData());
         }
 
+        // 3. 如果消息是Response，则进行decode
         if (message instanceof Response) {
             decode(((Response) message).getResult());
         }
-
+        // 4. 如果消息是其他类型，则调用父类的received方法
         handler.received(channel, message);
     }
 

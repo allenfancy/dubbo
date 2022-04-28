@@ -37,7 +37,9 @@ import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_TIMEOUT;
 import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 
 /**
- * ExchangeReceiver
+ * ExchangeReceiver for header exchange
+ *
+ * @author allen.wu
  */
 final class HeaderExchangeChannel implements ExchangeChannel {
 
@@ -45,8 +47,14 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     private static final String CHANNEL_KEY = HeaderExchangeChannel.class.getName() + ".CHANNEL";
 
+    /**
+     * The channel.
+     */
     private final Channel channel;
 
+    /**
+     * 是否关闭
+     */
     private volatile boolean closed = false;
 
     HeaderExchangeChannel(Channel channel) {
@@ -89,20 +97,20 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
+        // 1. 如果channel 已经关闭，则直接抛出异常.
         if (closed) {
             throw new RemotingException(this.getLocalAddress(), null, "Failed to send message " + message + ", cause: The channel " + this + " is closed!");
         }
-        if (message instanceof Request
-                || message instanceof Response
-                || message instanceof String) {
+        // 2. 如果消息类型为请求 或 响应 或 string，则直接发送.
+        if (message instanceof Request || message instanceof Response || message instanceof String) {
             channel.send(message, sent);
-        } else {
-            Request request = new Request();
-            request.setVersion(Version.getProtocolVersion());
-            request.setTwoWay(false);
-            request.setData(message);
-            channel.send(request, sent);
+            return;
         }
+        Request request = new Request();
+        request.setVersion(Version.getProtocolVersion());
+        request.setTwoWay(false);
+        request.setData(message);
+        channel.send(request, sent);
     }
 
     @Override
@@ -125,11 +133,12 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         if (closed) {
             throw new RemotingException(this.getLocalAddress(), null, "Failed to send request " + request + ", cause: The channel " + this + " is closed!");
         }
-        // create request.
+        // 1. 创建请求对象并设置基础信息
         Request req = new Request();
         req.setVersion(Version.getProtocolVersion());
         req.setTwoWay(true);
         req.setData(request);
+        // 2. 创建DefaultFuture对象;
         DefaultFuture future = DefaultFuture.newFuture(channel, req, timeout, executor);
         try {
             channel.send(req);
@@ -168,8 +177,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         }
         if (timeout > 0) {
             long start = System.currentTimeMillis();
-            while (DefaultFuture.hasFuture(channel)
-                    && System.currentTimeMillis() - start < timeout) {
+            while (DefaultFuture.hasFuture(channel) && System.currentTimeMillis() - start < timeout) {
                 try {
                     Thread.sleep(10);
                 } catch (InterruptedException e) {

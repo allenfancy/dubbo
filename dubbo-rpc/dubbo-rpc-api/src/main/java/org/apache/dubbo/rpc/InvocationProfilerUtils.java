@@ -25,25 +25,25 @@ import java.util.concurrent.Callable;
 public class InvocationProfilerUtils {
 
     public static void enterSimpleProfiler(Invocation invocation, Callable<String> messageCallable) {
-        if (ProfilerSwitch.isEnableSimpleProfiler()) {
+        if (ProfilerSwitch.getEnableSimpleProfiler()) {
             enterProfiler(invocation, messageCallable);
         }
     }
 
     public static void releaseSimpleProfiler(Invocation invocation) {
-        if (ProfilerSwitch.isEnableSimpleProfiler()) {
+        if (ProfilerSwitch.getEnableSimpleProfiler()) {
             releaseProfiler(invocation);
         }
     }
 
     public static void enterDetailProfiler(Invocation invocation, Callable<String> messageCallable) {
-        if (ProfilerSwitch.isEnableDetailProfiler()) {
+        if (ProfilerSwitch.getEnableDetailProfiler()) {
             enterProfiler(invocation, messageCallable);
         }
     }
 
     public static void releaseDetailProfiler(Invocation invocation) {
-        if (ProfilerSwitch.isEnableDetailProfiler()) {
+        if (ProfilerSwitch.getEnableDetailProfiler()) {
             releaseProfiler(invocation);
         }
     }

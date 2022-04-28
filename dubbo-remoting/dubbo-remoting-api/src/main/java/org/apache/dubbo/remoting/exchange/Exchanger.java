@@ -26,6 +26,9 @@ import org.apache.dubbo.remoting.exchange.support.header.HeaderExchanger;
 
 /**
  * Exchanger. (SPI, Singleton, ThreadSafe)
+ * exchange data between client and server.
+ *
+ * @author allen.wu
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Message_Exchange_Pattern">Message Exchange Pattern</a>
  * <a href="http://en.wikipedia.org/wiki/Request-response">Request-Response</a>
@@ -36,8 +39,8 @@ public interface Exchanger {
     /**
      * bind.
      *
-     * @param url
-     * @param handler
+     * @param url     url
+     * @param handler handler
      * @return message server
      */
     @Adaptive({Constants.EXCHANGER_KEY})
@@ -46,8 +49,8 @@ public interface Exchanger {
     /**
      * connect.
      *
-     * @param url
-     * @param handler
+     * @param url     url
+     * @param handler handler
      * @return message channel
      */
     @Adaptive({Constants.EXCHANGER_KEY})

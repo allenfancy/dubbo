@@ -72,13 +72,13 @@ public class NacosMetadataReport extends AbstractMetadataReport {
     /**
      * The group used to store metadata in Nacos
      */
-    private String group;
+    private final String group;
 
-    private Map<String, NacosConfigListener> watchListenerMap = new ConcurrentHashMap<>();
+    private final Map<String, NacosConfigListener> watchListenerMap = new ConcurrentHashMap<>();
 
-    private Map<String, MappingDataListener> casListenerMap = new ConcurrentHashMap<>();
+    private final Map<String, MappingDataListener> casListenerMap = new ConcurrentHashMap<>();
 
-    private MD5Utils md5Utils = new MD5Utils();
+    private final MD5Utils md5Utils = new MD5Utils();
 
     public NacosMetadataReport(URL url) {
         super(url);

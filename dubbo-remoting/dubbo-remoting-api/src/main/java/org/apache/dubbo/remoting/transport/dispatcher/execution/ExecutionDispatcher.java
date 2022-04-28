@@ -22,6 +22,9 @@ import org.apache.dubbo.remoting.Dispatcher;
 
 /**
  * In addition to sending all the use thread pool processing
+ * 除发送外，所有使用线程池处理
+ *
+ * @author allen.wu
  */
 public class ExecutionDispatcher implements Dispatcher {
 

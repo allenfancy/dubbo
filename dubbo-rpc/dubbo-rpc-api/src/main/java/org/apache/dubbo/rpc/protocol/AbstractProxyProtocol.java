@@ -21,18 +21,9 @@ import org.apache.dubbo.common.Parameters;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.utils.NetUtils;
 import org.apache.dubbo.common.utils.StringUtils;
-import org.apache.dubbo.remoting.Channel;
-import org.apache.dubbo.remoting.ChannelHandler;
 import org.apache.dubbo.remoting.Constants;
-import org.apache.dubbo.remoting.RemotingException;
-import org.apache.dubbo.remoting.RemotingServer;
-import org.apache.dubbo.rpc.Exporter;
-import org.apache.dubbo.rpc.Invocation;
-import org.apache.dubbo.rpc.Invoker;
-import org.apache.dubbo.rpc.ProtocolServer;
-import org.apache.dubbo.rpc.ProxyFactory;
-import org.apache.dubbo.rpc.Result;
-import org.apache.dubbo.rpc.RpcException;
+import org.apache.dubbo.remoting.*;
+import org.apache.dubbo.rpc.*;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -47,11 +38,17 @@ import static org.apache.dubbo.common.constants.CommonConstants.ANYHOST_VALUE;
 
 /**
  * AbstractProxyProtocol
+ * 抽象代理协议
+ *
+ * @author allen.wu
  */
 public abstract class AbstractProxyProtocol extends AbstractProtocol {
 
     private final List<Class<?>> rpcExceptions = new CopyOnWriteArrayList<Class<?>>();
 
+    /**
+     * 代理工厂
+     */
     protected ProxyFactory proxyFactory;
 
     public AbstractProxyProtocol() {
@@ -78,7 +75,9 @@ public abstract class AbstractProxyProtocol extends AbstractProtocol {
     @Override
     @SuppressWarnings("unchecked")
     public <T> Exporter<T> export(final Invoker<T> invoker) throws RpcException {
+        // 1. 获取到serviceKey
         final String uri = serviceKey(invoker.getUrl());
+        // 2. 通过serviceKey 查找AbstractProtocol中的ExporterMap中暴露出去的exporter
         Exporter<T> exporter = (Exporter<T>) exporterMap.get(uri);
         if (exporter != null) {
             // When modifying the configuration through override, you need to re-expose the newly modified service.
@@ -86,6 +85,7 @@ public abstract class AbstractProxyProtocol extends AbstractProtocol {
                 return exporter;
             }
         }
+        // 3. 执行doExport获取一个线程
         final Runnable runnable = doExport(proxyFactory.getProxy(invoker, true), invoker.getInterface(), invoker.getUrl());
         exporter = new AbstractExporter<T>(invoker) {
             @Override
@@ -162,15 +162,36 @@ public abstract class AbstractProxyProtocol extends AbstractProtocol {
         return RpcException.UNKNOWN_EXCEPTION;
     }
 
+    /**
+     * do Export
+     *
+     * @param impl impl
+     * @param type type
+     * @param <T>  T
+     * @return Runnable
+     * @throws RpcException rpc exception
+     */
     protected abstract <T> Runnable doExport(T impl, Class<T> type, URL url) throws RpcException;
 
+    /**
+     * doRefer
+     *
+     * @param type type
+     * @param url  url
+     * @param <T>  T
+     * @return T
+     * @throws RpcException rpc exception
+     */
     protected abstract <T> T doRefer(Class<T> type, URL url) throws RpcException;
 
+    /**
+     * proxy protocol server
+     */
     protected class ProxyProtocolServer implements ProtocolServer {
 
-        private RemotingServer server;
+        private final RemotingServer server;
         private String address;
-        private Map<String, Object> attributes = new ConcurrentHashMap<>();
+        private final Map<String, Object> attributes = new ConcurrentHashMap<>();
 
         public ProxyProtocolServer(RemotingServer server) {
             this.server = server;
@@ -207,6 +228,9 @@ public abstract class AbstractProxyProtocol extends AbstractProtocol {
         }
     }
 
+    /**
+     * remoting server adapter
+     */
     protected abstract class RemotingServerAdapter implements RemotingServer {
 
         public abstract Object getDelegateServer();

@@ -32,13 +32,21 @@ import static org.apache.dubbo.rpc.model.ScopeModelUtil.getFrameworkModel;
 
 /**
  * AbstractEndpoint
+ *
+ * @author allen.wu
  */
 public abstract class AbstractEndpoint extends AbstractPeer implements Resetable {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractEndpoint.class);
 
+    /**
+     * Codec2 对象
+     */
     private Codec2 codec;
 
+    /**
+     * 连接超时
+     */
     private int connectTimeout;
 
     public AbstractEndpoint(URL url, ChannelHandler handler) {
@@ -48,15 +56,19 @@ public abstract class AbstractEndpoint extends AbstractPeer implements Resetable
     }
 
     protected static Codec2 getChannelCodec(URL url) {
+        //1. 根据URL的codec参数获取扩展名
         String codecName = url.getParameter(Constants.CODEC_KEY);
+        //2. 如果URL的codec参数为空，则获取url的protocol
         if (StringUtils.isEmpty(codecName)) {
             // codec extension name must stay the same with protocol name
             codecName = url.getProtocol();
         }
+        //3. framework model.
         FrameworkModel frameworkModel = getFrameworkModel(url.getScopeModel());
         if (frameworkModel.getExtensionLoader(Codec2.class).hasExtension(codecName)) {
             return frameworkModel.getExtensionLoader(Codec2.class).getExtension(codecName);
         } else {
+            // 4. 尝试从老接口中获取
             return new CodecAdapter(frameworkModel.getExtensionLoader(Codec.class)
                 .getExtension(codecName));
         }

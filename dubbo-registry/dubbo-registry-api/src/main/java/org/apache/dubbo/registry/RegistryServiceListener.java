@@ -20,21 +20,46 @@ package org.apache.dubbo.registry;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.extension.SPI;
 
+/**
+ * 注册服务监听器接口
+ * @author qian.lei
+ */
 @SPI
 public interface RegistryServiceListener {
+
+    /**
+     * 注册服务监听器
+     * @param url url
+     * @param registry registry
+     */
     default void onRegister(URL url, Registry registry) {
 
     }
 
 
+    /**
+     * 取消注册监听器
+     * @param url url
+     * @param registry registry
+     */
     default void onUnregister(URL url, Registry registry) {
 
     }
 
+    /**
+     * 订阅监听器
+     * @param url url
+     * @param registry registry
+     */
     default void onSubscribe(URL url, Registry registry) {
 
     }
 
+    /**
+     * 取消订阅监听器
+     * @param url   url
+     * @param registry  registry
+     */
     default void onUnsubscribe(URL url, Registry registry) {
 
     }

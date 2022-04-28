@@ -23,12 +23,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -36,8 +31,16 @@ import static org.apache.dubbo.common.constants.CommonConstants.MAX_PROXY_COUNT;
 
 /**
  * Proxy.
+ * WeakReference(弱引用)：
+ * 特性：
+ *     引用对象的生命周期在2次GC之间，当垃圾收集器扫描到只具有弱引用的对象时，就会回收这些对象。（由于垃圾收集器是一个优先级较低的线程，不一定很快就会发现具有弱引用的对象）
+ * 适用：
+ *      适用于数据可以恢复性的内存缓存。
+ * 查找结果缓存结果有三个：
+ *  1.
+ *
+ * @author allen.wu
  */
-
 public class Proxy {
     public static final InvocationHandler THROW_UNSUPPORTED_INVOKER = new InvocationHandler() {
         @Override
@@ -47,6 +50,14 @@ public class Proxy {
     };
 
     private static final AtomicLong PROXY_CLASS_COUNTER = new AtomicLong(0);
+
+    /**
+     * 代理类缓存
+     * KEY：ClassLoader
+     * VAL: Map<Class<?>, Class<?>>
+     * KEY：整理得到的接口拼接而成
+     * VAL：被缓存的代理类的 WeakReference（弱引用)
+     */
     private static final Map<ClassLoader, Map<String, Proxy>> PROXY_CACHE_MAP = new WeakHashMap<>();
 
     private final Class<?> classToCreate;
@@ -127,14 +138,15 @@ public class Proxy {
             String pkg = ics[0].getPackage().getName();
             Class<?> neighbor = ics[0];
 
+            // 1. 循环处理每个接口类
             for (Class<?> ic : ics) {
                 String npkg = ic.getPackage().getName();
+                //1.1 传入的必须是接口类，否则直接报错
                 if (!Modifier.isPublic(ic.getModifiers())) {
                     if (!pkg.equals(npkg)) {
                         throw new IllegalArgumentException("non-public interfaces from different packages");
                     }
                 }
-
                 ccp.addInterface(ic);
 
                 for (Method method : ic.getMethods()) {

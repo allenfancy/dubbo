@@ -32,18 +32,23 @@ import java.util.Map;
 import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_TIMEOUT;
 import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 
+/**
+ * InvocationUtil
+ * @author allen.wu
+ */
 public class InvocationUtil {
     private static final Logger logger = LoggerFactory.getLogger(InvokerInvocationHandler.class);
 
     public static Object invoke(Invoker<?> invoker, RpcInvocation rpcInvocation) throws Throwable {
+        // 1. 获取invoker的url
         URL url = invoker.getUrl();
         String serviceKey = url.getServiceKey();
         rpcInvocation.setTargetServiceUniqueName(serviceKey);
 
-        // invoker.getUrl() returns consumer url.
+        // 2. invoker.getUrl() returns consumer url.
         RpcServiceContext.getServiceContext().setConsumerUrl(url);
 
-        if (ProfilerSwitch.isEnableSimpleProfiler()) {
+        if (ProfilerSwitch.getEnableSimpleProfiler()) {
             ProfilerEntry parentProfiler = Profiler.getBizProfiler();
             ProfilerEntry bizProfiler;
             if (parentProfiler != null) {
@@ -85,6 +90,8 @@ public class InvocationUtil {
                 }
             }
         }
+
+        // 4. 调用invoke()方法发起远程调用，拿到AsyncRpcResult之后，调用recreate()方法获取响应结果(或是Future)
         return invoker.invoke(rpcInvocation).recreate();
     }
 }

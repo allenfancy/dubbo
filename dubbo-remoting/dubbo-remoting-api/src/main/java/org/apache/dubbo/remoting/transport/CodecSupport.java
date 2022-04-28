@@ -32,24 +32,31 @@ import org.apache.dubbo.rpc.model.FrameworkServiceRepository;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.apache.dubbo.common.BaseServiceMetadata.keyWithoutGroup;
 
+/**
+ * CodecSupport
+ * codec2 support
+ *
+ * @author allen.wu
+ */
 public class CodecSupport {
     private static final Logger logger = LoggerFactory.getLogger(CodecSupport.class);
-    private static Map<Byte, Serialization> ID_SERIALIZATION_MAP = new HashMap<Byte, Serialization>();
-    private static Map<Byte, String> ID_SERIALIZATIONNAME_MAP = new HashMap<Byte, String>();
-    private static Map<String, Byte> SERIALIZATIONNAME_ID_MAP = new HashMap<String, Byte>();
-    // Cache null object serialize results, for heartbeat request/response serialize use.
-    private static Map<Byte, byte[]> ID_NULLBYTES_MAP = new HashMap<Byte, byte[]>();
+    private static final Map<Byte, Serialization> ID_SERIALIZATION_MAP = new HashMap<>();
+    private static final Map<Byte, String> ID_SERIALIZATIONNAME_MAP = new HashMap<>();
+    private static final Map<String, Byte> SERIALIZATIONNAME_ID_MAP = new HashMap<>();
+    /**
+     * Cache null object serialize results, for heartbeat request/response serialize use.
+     */
+    private static final Map<Byte, byte[]> ID_NULLBYTES_MAP = new HashMap<>();
 
     private static final ThreadLocal<byte[]> TL_BUFFER = ThreadLocal.withInitial(() -> new byte[1024]);
 
+    /**
+     * 静态方法，加载支持所有的Serialization方法到本地MAP
+     */
     static {
         ExtensionLoader<Serialization> extensionLoader = FrameworkModel.defaultModel().getExtensionLoader(Serialization.class);
         Set<String> supportedExtensions = extensionLoader.getSupportedExtensions();
@@ -173,7 +180,7 @@ public class CodecSupport {
                     match = true;
                 }
             }
-            if(!match) {
+            if (!match) {
                 throw new IOException("Unexpected serialization id:" + id + " received from network, please check if the peer send the right id.");
             }
         }

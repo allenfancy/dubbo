@@ -16,6 +16,10 @@
  */
 package org.apache.dubbo.remoting.transport.netty4;
 
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
+import io.netty.handler.timeout.IdleStateEvent;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
@@ -23,29 +27,40 @@ import org.apache.dubbo.common.utils.NetUtils;
 import org.apache.dubbo.remoting.Channel;
 import org.apache.dubbo.remoting.ChannelHandler;
 
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
-import io.netty.handler.timeout.IdleStateEvent;
-
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * NettyServerHandler.
+ * ChannelDuplexHandler，这是 Netty 提供的一个同时处理 Inbound 数据和 Outbound 数据的 ChannelHandler
+ *
+ * @author allen.wu
  */
 @io.netty.channel.ChannelHandler.Sharable
 public class NettyServerHandler extends ChannelDuplexHandler {
+
     private static final Logger logger = LoggerFactory.getLogger(NettyServerHandler.class);
+
     /**
      * the cache for alive worker channel.
+     * key: ip + port
+     * val: dubbo + channel
      * <ip:port, dubbo channel>
+     * 记录了当前 Server 创建的所有 Channel，
+     * 连接创建（触发 channelActive() 方法）、连接断开（触发 channelInactive()方法）
+     * 会操作 channels 集合进行相应的增删
      */
     private final Map<String, Channel> channels = new ConcurrentHashMap<String, Channel>();
 
+    /**
+     * URL
+     */
     private final URL url;
 
+    /**
+     * NettyServerHandler 内几乎所有方法都会触发该 Dubbo ChannelHandler 对象
+     */
     private final ChannelHandler handler;
 
     public NettyServerHandler(URL url, ChannelHandler handler) {
@@ -100,8 +115,12 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+        // 1. 将发送的数据继续向下传递
         super.write(ctx, msg, promise);
+        // 2. 并不影响消息的继续发送，只是触发sent()方法进行相关的处理，这也是方法的重点
+        // 名称是动词过去式的原因，可以仔细体会一下。其他方法可能没有那么明显，但是这个方法是最重要的;这里以write()方法为例进行说明
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
+        // 3. 将发送的数据转换成字节数组
         handler.sent(channel, msg);
     }
 
@@ -122,7 +141,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
-        throws Exception {
+            throws Exception {
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
         try {
             handler.caught(channel, cause);

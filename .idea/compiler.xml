@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="dubbo-spring-boot-autoconfigure-compatible" />
+        <module name="dubbo-spring-boot-actuator" />
+        <module name="dubbo-spring-boot-starter" />
+        <module name="dubbo-spring-boot-actuator-compatible" />
+        <module name="dubbo-spring-boot-autoconfigure" />
+        <module name="dubbo-build-tools" />
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="dubbo-auth" options="-proc:none -parameters" />
+      <module name="dubbo-cluster" options="-proc:none -parameters" />
+      <module name="dubbo-common" options="-proc:none -parameters" />
+      <module name="dubbo-compatible" options="-proc:none -parameters" />
+      <module name="dubbo-config-api" options="-proc:none -parameters" />
+      <module name="dubbo-config-spring" options="-proc:none -parameters" />
+      <module name="dubbo-configcenter-apollo" options="-proc:none -parameters" />
+      <module name="dubbo-configcenter-nacos" options="-proc:none -parameters" />
+      <module name="dubbo-configcenter-zookeeper" options="-proc:none -parameters" />
+      <module name="dubbo-container-api" options="-proc:none -parameters" />
+      <module name="dubbo-container-spring" options="-proc:none -parameters" />
+      <module name="dubbo-demo" options="-proc:none -parameters" />
+      <module name="dubbo-demo-annotation-consumer" options="-proc:none -parameters" />
+      <module name="dubbo-demo-annotation-provider" options="-proc:none -parameters" />
+      <module name="dubbo-demo-api-consumer" options="-proc:none -parameters" />
+      <module name="dubbo-demo-api-provider" options="-proc:none -parameters" />
+      <module name="dubbo-demo-generic-call" options="-proc:none -parameters" />
+      <module name="dubbo-demo-interface" options="-proc:none -parameters" />
+      <module name="dubbo-demo-native-consumer" options="-proc:none -parameters" />
+      <module name="dubbo-demo-native-interface" options="-proc:none -parameters" />
+      <module name="dubbo-demo-native-provider" options="-proc:none -parameters" />
+      <module name="dubbo-demo-spring-boot-consumer" options="-proc:none -parameters" />
+      <module name="dubbo-demo-spring-boot-interface" options="-proc:none -parameters" />
+      <module name="dubbo-demo-spring-boot-provider" options="-proc:none -parameters" />
+      <module name="dubbo-demo-triple" options="-proc:none -parameters" />
+      <module name="dubbo-demo-xml-consumer" options="-proc:none -parameters" />
+      <module name="dubbo-demo-xml-provider" options="-proc:none -parameters" />
+      <module name="dubbo-filter-cache" options="-proc:none -parameters" />
+      <module name="dubbo-filter-validation" options="-proc:none -parameters" />
+      <module name="dubbo-metadata-api" options="-proc:none -parameters" />
+      <module name="dubbo-metadata-definition-protobuf" options="-proc:none -parameters" />
+      <module name="dubbo-metadata-processor" options="-proc:none -parameters" />
+      <module name="dubbo-metadata-report-nacos" options="-proc:none -parameters" />
+      <module name="dubbo-metadata-report-redis" options="-proc:none -parameters" />
+      <module name="dubbo-metadata-report-zookeeper" options="-proc:none -parameters" />
+      <module name="dubbo-metrics-api" options="-proc:none -parameters" />
+      <module name="dubbo-metrics-prometheus" options="-proc:none -parameters" />
+      <module name="dubbo-monitor-api" options="-proc:none -parameters" />
+      <module name="dubbo-monitor-default" options="-proc:none -parameters" />
+      <module name="dubbo-native" options="-proc:none -parameters" />
+      <module name="dubbo-native-plugin" options="-proc:none -parameters" />
+      <module name="dubbo-qos" options="-proc:none -parameters" />
+      <module name="dubbo-registry-api" options="-proc:none -parameters" />
+      <module name="dubbo-registry-multicast" options="-proc:none -parameters" />
+      <module name="dubbo-registry-multiple" options="-proc:none -parameters" />
+      <module name="dubbo-registry-nacos" options="-proc:none -parameters" />
+      <module name="dubbo-registry-zookeeper" options="-proc:none -parameters" />
+      <module name="dubbo-remoting-api" options="-proc:none -parameters" />
+      <module name="dubbo-remoting-http" options="-proc:none -parameters" />
+      <module name="dubbo-remoting-netty" options="-proc:none -parameters" />
+      <module name="dubbo-remoting-netty4" options="-proc:none -parameters" />
+      <module name="dubbo-remoting-zookeeper" options="-proc:none -parameters" />
+      <module name="dubbo-remoting-zookeeper-curator5" options="-proc:none -parameters" />
+      <module name="dubbo-rpc-api" options="-proc:none -parameters" />
+      <module name="dubbo-rpc-dubbo" options="-proc:none -parameters" />
+      <module name="dubbo-rpc-grpc" options="-proc:none -parameters" />
+      <module name="dubbo-rpc-injvm" options="-proc:none -parameters" />
+      <module name="dubbo-rpc-rest" options="-proc:none -parameters" />
+      <module name="dubbo-rpc-triple" options="-proc:none -parameters" />
+      <module name="dubbo-serialization-api" options="-proc:none -parameters" />
+      <module name="dubbo-serialization-hessian2" options="-proc:none -parameters" />
+      <module name="dubbo-serialization-jdk" options="-proc:none -parameters" />
+      <module name="dubbo-spring-boot-actuator" options="-parameters" />
+      <module name="dubbo-spring-boot-actuator-compatible" options="-parameters" />
+      <module name="dubbo-spring-boot-autoconfigure" options="-parameters" />
+      <module name="dubbo-spring-boot-autoconfigure-compatible" options="-parameters" />
+      <module name="dubbo-spring-boot-starter" options="-parameters" />
+      <module name="dubbo-test-check" options="-proc:none -parameters" />
+      <module name="dubbo-test-common" options="-proc:none -parameters" />
+      <module name="dubbo-test-spring" options="-proc:none -parameters" />
+      <module name="dubbo-test-spring3.2" options="-proc:none -parameters" />
+      <module name="dubbo-test-spring4.1" options="-proc:none -parameters" />
+      <module name="dubbo-test-spring4.2" options="-proc:none -parameters" />
+    </option>
+  </component>
+</project>

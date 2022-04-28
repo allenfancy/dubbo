@@ -18,12 +18,15 @@ package org.apache.dubbo.common.serialize;
 import org.apache.dubbo.rpc.model.ScopeModel;
 import org.apache.dubbo.rpc.model.ScopeModelUtil;
 public class Serialization$Adaptive implements org.apache.dubbo.common.serialize.Serialization {
+@Override
 public byte getContentTypeId()  {
 throw new UnsupportedOperationException("The method public abstract byte org.apache.dubbo.common.serialize.Serialization.getContentTypeId() of interface org.apache.dubbo.common.serialize.Serialization is not adaptive method!");
 }
+@Override
 public java.lang.String getContentType()  {
 throw new UnsupportedOperationException("The method public abstract java.lang.String org.apache.dubbo.common.serialize.Serialization.getContentType() of interface org.apache.dubbo.common.serialize.Serialization is not adaptive method!");
 }
+@Override
 public org.apache.dubbo.common.serialize.ObjectInput deserialize(org.apache.dubbo.common.URL arg0, java.io.InputStream arg1) throws java.io.IOException {
 if (arg0 == null) throw new IllegalArgumentException("url == null");
 org.apache.dubbo.common.URL url = arg0;
@@ -33,6 +36,7 @@ ScopeModel scopeModel = ScopeModelUtil.getOrDefault(url.getScopeModel(), org.apa
 org.apache.dubbo.common.serialize.Serialization extension = (org.apache.dubbo.common.serialize.Serialization)scopeModel.getExtensionLoader(org.apache.dubbo.common.serialize.Serialization.class).getExtension(extName);
 return extension.deserialize(arg0, arg1);
 }
+@Override
 public org.apache.dubbo.common.serialize.ObjectOutput serialize(org.apache.dubbo.common.URL arg0, java.io.OutputStream arg1) throws java.io.IOException {
 if (arg0 == null) throw new IllegalArgumentException("url == null");
 org.apache.dubbo.common.URL url = arg0;

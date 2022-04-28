@@ -43,7 +43,7 @@ public class ProfilerServerFilter implements Filter, BaseFilter.Listener {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
-        if (ProfilerSwitch.isEnableSimpleProfiler()) {
+        if (ProfilerSwitch.getEnableSimpleProfiler()) {
             ProfilerEntry bizProfiler;
             Object localInvokeProfiler = invocation.get(Profiler.PROFILER_KEY);
             if (localInvokeProfiler instanceof ProfilerEntry) {
@@ -69,7 +69,7 @@ public class ProfilerServerFilter implements Filter, BaseFilter.Listener {
     }
 
     private void afterInvoke(Invoker<?> invoker, Invocation invocation) {
-        if (ProfilerSwitch.isEnableSimpleProfiler()) {
+        if (ProfilerSwitch.getEnableSimpleProfiler()) {
             Object fromInvocation = invocation.get(Profiler.PROFILER_KEY);
             if (fromInvocation instanceof ProfilerEntry) {
                 ProfilerEntry profiler = Profiler.release((ProfilerEntry) fromInvocation);

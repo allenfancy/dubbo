@@ -24,11 +24,19 @@ import java.util.Map;
 
 /**
  * DubboExporter
+ *
+ * @author allen.wu
  */
 public class DubboExporter<T> extends AbstractExporter<T> {
 
+    /**
+     * service key
+     */
     private final String key;
 
+    /**
+     * export map
+     */
     private final Map<String, Exporter<?>> exporterMap;
 
     public DubboExporter(Invoker<T> invoker, String key, Map<String, Exporter<?>> exporterMap) {

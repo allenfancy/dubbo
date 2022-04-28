@@ -16,6 +16,15 @@
  */
 package org.apache.dubbo.remoting.transport.netty4;
 
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.concurrent.Future;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.config.ConfigurationUtils;
 import org.apache.dubbo.common.logger.Logger;
@@ -33,44 +42,38 @@ import org.apache.dubbo.remoting.transport.AbstractServer;
 import org.apache.dubbo.remoting.transport.dispatcher.ChannelHandlers;
 import org.apache.dubbo.remoting.utils.UrlUtils;
 
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.timeout.IdleStateHandler;
-import io.netty.util.concurrent.Future;
-
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.apache.dubbo.common.constants.CommonConstants.IO_THREADS_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.KEEP_ALIVE_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.SSL_ENABLED_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.*;
 import static org.apache.dubbo.remoting.Constants.EVENT_LOOP_BOSS_POOL_NAME;
 import static org.apache.dubbo.remoting.Constants.EVENT_LOOP_WORKER_POOL_NAME;
 
 
 /**
  * NettyServer.
+ * netty4.0.x server 实现
+ *
+ * @author allen.wu
  */
 public class NettyServer extends AbstractServer {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyServer.class);
+
     /**
      * the cache for alive worker channel.
      * <ip:port, dubbo channel>
      */
     private Map<String, Channel> channels;
+
     /**
      * netty server bootstrap.
      */
     private ServerBootstrap bootstrap;
+
     /**
      * the boss channel that receive connections and dispatch these to worker channel.
      */
@@ -91,22 +94,31 @@ public class NettyServer extends AbstractServer {
 
     /**
      * Init and start netty server
+     * 初始化和启动netty服务器
      *
-     * @throws Throwable
+     * @throws Throwable Throwable
      */
     @Override
     protected void doOpen() throws Throwable {
+        // 1.boss strap ServerBootstrap
         bootstrap = new ServerBootstrap();
 
+        // 2.boss group EventLoopGroup
         bossGroup = createBossGroup();
+
+        //3. worker group EventLoopGroup
         workerGroup = createWorkerGroup();
 
+        //4. 创建netty server handler
         final NettyServerHandler nettyServerHandler = createNettyServerHandler();
+
+        //5. channels
         channels = nettyServerHandler.getChannels();
 
+        // 6. 初始化init server bootstrap
         initServerBootstrap(nettyServerHandler);
 
-        // bind
+        // 7. bind
         ChannelFuture channelFuture = bootstrap.bind(getBindAddress());
         channelFuture.syncUninterruptibly();
         channel = channelFuture.channel();
@@ -114,13 +126,15 @@ public class NettyServer extends AbstractServer {
     }
 
     protected EventLoopGroup createBossGroup() {
+        // boss group
         return NettyEventLoopFactory.eventLoopGroup(1, EVENT_LOOP_BOSS_POOL_NAME);
     }
 
     protected EventLoopGroup createWorkerGroup() {
+        // 1. get worker thread pool size
         return NettyEventLoopFactory.eventLoopGroup(
                 getUrl().getPositiveParameter(IO_THREADS_KEY, Constants.DEFAULT_IO_THREADS),
-            EVENT_LOOP_WORKER_POOL_NAME);
+                EVENT_LOOP_WORKER_POOL_NAME);
     }
 
     protected NettyServerHandler createNettyServerHandler() {
@@ -128,6 +142,7 @@ public class NettyServer extends AbstractServer {
     }
 
     protected void initServerBootstrap(NettyServerHandler nettyServerHandler) {
+        // 1. keep alive
         boolean keepalive = getUrl().getParameter(KEEP_ALIVE_KEY, Boolean.FALSE);
 
         bootstrap.group(bossGroup, workerGroup)
@@ -141,6 +156,7 @@ public class NettyServer extends AbstractServer {
                     protected void initChannel(SocketChannel ch) throws Exception {
                         // FIXME: should we use getTimeout()?
                         int idleTimeout = UrlUtils.getIdleTimeout(getUrl());
+                        // netty code adapter.
                         NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyServer.this);
                         if (getUrl().getParameter(SSL_ENABLED_KEY, false)) {
                             ch.pipeline().addLast("negotiation", new SslServerTlsHandler(getUrl()));

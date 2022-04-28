@@ -24,11 +24,17 @@ import org.apache.dubbo.remoting.Client;
 
 /**
  * ReconnectTimerTask
+ * 重连 timer task.
+ *
+ * @author allen.wu
  */
 public class ReconnectTimerTask extends AbstractTimerTask {
 
     private static final Logger logger = LoggerFactory.getLogger(ReconnectTimerTask.class);
 
+    /**
+     * 空闲超时时间
+     */
     private final int idleTimeout;
 
     public ReconnectTimerTask(ChannelProvider channelProvider, Long heartbeatTimeoutTick, int idleTimeout) {
@@ -50,7 +56,7 @@ public class ReconnectTimerTask extends AbstractTimerTask {
                 } catch (Exception e) {
                     logger.error("Fail to connect to " + channel, e);
                 }
-            // check pong at client
+                // check pong at client
             } else if (lastRead != null && now - lastRead > idleTimeout) {
                 logger.warn("Reconnect to channel " + channel + ", because heartbeat read idle time out: "
                         + idleTimeout + "ms");

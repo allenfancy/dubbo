@@ -40,13 +40,16 @@ import java.util.concurrent.Future;
  * ServiceContext: Using to pass environment parameters in the whole invocation. For example, `remotingApplicationName`,
  * `remoteAddress`, etc. {@link RpcServiceContext}
  * ClientAttachment, ServerAttachment and ServiceContext are using to transfer attachments.
+ * <p/>
  * Imaging a situation like this, A is calling B, and B will call C, after that, B wants to return some attachments back to A.
  * ClientAttachment is using to pass attachments to next hop as a consumer. ( A --> B , in A side)
  * ServerAttachment is using to fetch attachments from previous hop as a provider. ( A --> B , in B side)
  * ServerContext is using to return some attachments back to client as a provider. ( A <-- B , in B side)
  * The reason why using `ServiceContext` is to make API compatible with previous.
  *
- * @export
+ * 线程级别的上下文信息，每个线程绑定一个 RpcContext 对象，底层依赖 ThreadLocal 实现。RpcContext 主要用于存储一个线程中一次请求的临时状态
+ *
+ * @author allen.wu
  * @see org.apache.dubbo.rpc.filter.ContextFilter
  */
 public class RpcContext {
@@ -55,6 +58,7 @@ public class RpcContext {
 
     /**
      * use internal thread local to improve performance
+     * 在接收到响应的时候，会使用该RpcContext来存储上下文信息
      */
     private static final InternalThreadLocal<RpcContextAttachment> SERVER_LOCAL = new InternalThreadLocal<RpcContextAttachment>() {
         @Override
@@ -63,6 +67,9 @@ public class RpcContext {
         }
     };
 
+    /**
+     * Client attachment attached to current thread.
+     */
     private static final InternalThreadLocal<RpcContextAttachment> CLIENT_ATTACHMENT = new InternalThreadLocal<RpcContextAttachment>() {
         @Override
         protected RpcContextAttachment initialValue() {
@@ -70,6 +77,9 @@ public class RpcContext {
         }
     };
 
+    /**
+     * server attachment
+     */
     private static final InternalThreadLocal<RpcContextAttachment> SERVER_ATTACHMENT = new InternalThreadLocal<RpcContextAttachment>() {
         @Override
         protected RpcContextAttachment initialValue() {
@@ -77,6 +87,9 @@ public class RpcContext {
         }
     };
 
+    /**
+     * service context
+     */
     private static final InternalThreadLocal<RpcServiceContext> SERVICE_CONTEXT = new InternalThreadLocal<RpcServiceContext>() {
         @Override
         protected RpcServiceContext initialValue() {

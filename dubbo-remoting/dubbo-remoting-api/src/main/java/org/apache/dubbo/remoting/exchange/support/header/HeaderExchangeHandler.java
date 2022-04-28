@@ -21,11 +21,7 @@ import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.common.utils.NetUtils;
 import org.apache.dubbo.common.utils.StringUtils;
-import org.apache.dubbo.remoting.Channel;
-import org.apache.dubbo.remoting.ChannelHandler;
-import org.apache.dubbo.remoting.Constants;
-import org.apache.dubbo.remoting.ExecutionException;
-import org.apache.dubbo.remoting.RemotingException;
+import org.apache.dubbo.remoting.*;
 import org.apache.dubbo.remoting.exchange.ExchangeChannel;
 import org.apache.dubbo.remoting.exchange.ExchangeHandler;
 import org.apache.dubbo.remoting.exchange.Request;
@@ -41,11 +37,23 @@ import static org.apache.dubbo.common.constants.CommonConstants.READONLY_EVENT;
 
 /**
  * ExchangeReceiver
+ * HeaderExchangeHandler 是 ExchangeHandler 的装饰器，
+ * 其中维护了一个 ExchangeHandler 对象，ExchangeHandler 接口是 Exchange 层与上层交互的接口之一，上层调用方可以实现该接口完成自身的功能；
+ * 然后再由 HeaderExchangeHandler 修饰，具备 Exchange 层处理 Request-Response 的能力；
+ * 最后再由 Transport ChannelHandler 修饰，具备 Transport 层的能力
+ * <p>
+ * HeaderExchangeHandler 作为一个装饰器，
+ * 其 connected()、disconnected()、sent()、received()、caught() 方法最终都会转发给上层提供的 ExchangeHandler 进行处理。
+ *
+ * @author allen.wu
  */
 public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
     protected static final Logger logger = LoggerFactory.getLogger(HeaderExchangeHandler.class);
 
+    /**
+     * 维护一个ExchangeHandler 对象
+     */
     private final ExchangeHandler handler;
 
     public HeaderExchangeHandler(ExchangeHandler handler) {
@@ -55,12 +63,25 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         this.handler = handler;
     }
 
+    /**
+     * 处理响应
+     *
+     * @param channel  channel
+     * @param response response
+     * @throws RemotingException remoting exception
+     */
     static void handleResponse(Channel channel, Response response) throws RemotingException {
         if (response != null && !response.isHeartbeat()) {
             DefaultFuture.received(channel, response);
         }
     }
 
+    /**
+     * 判断是client还是server
+     *
+     * @param channel channel
+     * @return true or false
+     */
     private static boolean isClientSide(Channel channel) {
         InetSocketAddress address = channel.getRemoteAddress();
         URL url = channel.getUrl();
@@ -69,12 +90,26 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
                         .equals(NetUtils.filterLocalHost(address.getAddress().getHostAddress()));
     }
 
+    /**
+     * 只读请求
+     *
+     * @param channel channel
+     * @param req     req
+     * @throws RemotingException remoting exception
+     */
     void handlerEvent(Channel channel, Request req) throws RemotingException {
         if (req.getData() != null && req.getData().equals(READONLY_EVENT)) {
             channel.setAttribute(Constants.CHANNEL_ATTRIBUTE_READONLY_KEY, Boolean.TRUE);
         }
     }
 
+    /**
+     * 处理请求:双向请求
+     *
+     * @param channel channel
+     * @param req     req
+     * @throws RemotingException remoting exception
+     */
     void handleRequest(final ExchangeChannel channel, Request req) throws RemotingException {
         Response res = new Response(req.getId(), req.getVersion());
         if (req.isBroken()) {
@@ -97,7 +132,9 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         // find handler by message class.
         Object msg = req.getData();
         try {
+            // 如果是DUBBO协议，会调用DubboProtocol类中requestHandler.invoke()方法
             CompletionStage<Object> future = handler.reply(channel, msg);
+            //
             future.whenComplete((appResult, t) -> {
                 try {
                     if (t == null) {
@@ -162,23 +199,37 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         }
     }
 
+    /**
+     * 核心处理逻辑
+     *
+     * @param channel channel.
+     * @param message message.
+     * @throws RemotingException remoting exception.
+     */
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
+        // 1. 获取ExchangeChannel
         final ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
+        // 2. 如果消息类型为请求
         if (message instanceof Request) {
             // handle request.
             Request request = (Request) message;
+            // 2.1 如果是事件消息，即只读消息，调用handlerEvent方法
             if (request.isEvent()) {
                 handlerEvent(channel, request);
             } else {
+                // 2.2.1 如果是双向请求，则调用handlerRequest方法
                 if (request.isTwoWay()) {
                     handleRequest(exchangeChannel, request);
                 } else {
+                    //2.2.2 否则，调用handler.receive方法;由各个协议
                     handler.received(exchangeChannel, request.getData());
                 }
             }
+            // 3. 处理响应
         } else if (message instanceof Response) {
             handleResponse(channel, (Response) message);
+            // 4. 如果是String类型;根据当前服务的角色进行分类，具体与 Dubbo 对 telnet 的支持相关
         } else if (message instanceof String) {
             if (isClientSide(channel)) {
                 Exception e = new Exception("Dubbo client can not supported string message: " + message + " in channel: " + channel + ", url: " + channel.getUrl());
@@ -189,6 +240,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
                     channel.send(echo);
                 }
             }
+            // 5. 否则，调用handler.receive方法
         } else {
             handler.received(exchangeChannel, message);
         }
@@ -220,6 +272,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
     @Override
     public ChannelHandler getHandler() {
+        // 1. 如果是ChannelHandlerDelegate，则返回handler
         if (handler instanceof ChannelHandlerDelegate) {
             return ((ChannelHandlerDelegate) handler).getHandler();
         } else {

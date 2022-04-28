@@ -21,8 +21,16 @@ import org.apache.dubbo.common.URL;
 
 import java.util.Collections;
 
+/**
+ * 注册工厂wrapper类；它在底层RegistryFactory创建Registry对象外层封装了一个ListenerRegistryWrapper.
+ * ListenerRegistryWrapper中维护了一个RegistryServiceListener集合，会将register()、subscribe()
+ * 等事件通知到RegistryServiceListener监听器中
+ *
+ * @author tony.chenl
+ */
 public class RegistryFactoryWrapper implements RegistryFactory {
-    private RegistryFactory registryFactory;
+
+    private final RegistryFactory registryFactory;
 
     public RegistryFactoryWrapper(RegistryFactory registryFactory) {
         this.registryFactory = registryFactory;

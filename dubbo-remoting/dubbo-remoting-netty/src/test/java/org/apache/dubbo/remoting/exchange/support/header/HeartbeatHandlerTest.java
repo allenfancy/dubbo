@@ -144,6 +144,7 @@ public class HeartbeatHandlerTest {
             this.disconnectCountDownLatch = disconnectCountDownLatch;
         }
 
+        @Override
         public CompletableFuture<Object> reply(ExchangeChannel channel, Object request) throws RemotingException {
             return CompletableFuture.completedFuture(request);
         }

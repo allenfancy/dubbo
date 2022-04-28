@@ -20,6 +20,11 @@ package com.alibaba.dubbo.remoting;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.remoting.ChannelHandler;
 
+/**
+ * dispatcher
+ *
+ * @author allen.wu
+ */
 @Deprecated
 public interface Dispatcher extends org.apache.dubbo.remoting.Dispatcher {
 

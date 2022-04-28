@@ -24,15 +24,18 @@ import java.util.concurrent.ExecutorService;
 
 /**
  * ExchangeChannel. (API/SPI, Prototype, ThreadSafe)
+ * Channel 接口之上抽象了 Exchange 层的网络连接
+ *
+ * @author allen.wu
  */
 public interface ExchangeChannel extends Channel {
 
     /**
      * send request.
      *
-     * @param request
+     * @param request 请求对象
      * @return response future
-     * @throws RemotingException
+     * @throws RemotingException 远程调用异常
      */
     @Deprecated
     CompletableFuture<Object> request(Object request) throws RemotingException;
@@ -40,35 +43,39 @@ public interface ExchangeChannel extends Channel {
     /**
      * send request.
      *
-     * @param request
-     * @param timeout
-     * @return response future
-     * @throws RemotingException
+     * @param request 请求对象
+     * @param timeout 请求超时
+     * @return response future 响应 future
+     * @throws RemotingException 远程调用异常
      */
     @Deprecated
     CompletableFuture<Object> request(Object request, int timeout) throws RemotingException;
 
     /**
      * send request.
+     * 发送请求对象
      *
-     * @param request
+     * @param request  request
+     * @param executor executor 执行器
      * @return response future
-     * @throws RemotingException
+     * @throws RemotingException 远程调用异常
      */
     CompletableFuture<Object> request(Object request, ExecutorService executor) throws RemotingException;
 
     /**
      * send request.
      *
-     * @param request
-     * @param timeout
+     * @param request  request
+     * @param timeout  timeout
+     * @param executor executor
      * @return response future
-     * @throws RemotingException
+     * @throws RemotingException 远程调用异常
      */
     CompletableFuture<Object> request(Object request, int timeout, ExecutorService executor) throws RemotingException;
 
     /**
      * get message handler.
+     * 获取message handler.
      *
      * @return message handler
      */
@@ -76,8 +83,9 @@ public interface ExchangeChannel extends Channel {
 
     /**
      * graceful close.
+     * 优雅关闭
      *
-     * @param timeout
+     * @param timeout timeout
      */
     @Override
     void close(int timeout);

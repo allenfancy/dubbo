@@ -22,6 +22,9 @@ import org.apache.dubbo.remoting.Dispatcher;
 
 /**
  * Only message receive uses the thread pool.
+ * 只有消息接收方使用线程池。
+ *
+ * @author allen.wu
  */
 public class MessageOnlyDispatcher implements Dispatcher {
 

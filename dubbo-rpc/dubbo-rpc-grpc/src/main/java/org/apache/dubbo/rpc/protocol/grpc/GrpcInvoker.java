@@ -32,12 +32,7 @@ public class GrpcInvoker<T> extends AbstractInvoker<T> {
     private final ReentrantLock destroyLock = new ReentrantLock();
 
     private final Invoker<T> target;
-    private ReferenceCountManagedChannel channel;
-
-//    private static List<Exception> grpcExceptions = new ArrayList<>();
-//    static {
-//        grpcExceptions.add();
-//    }
+    private final ReferenceCountManagedChannel channel;
 
     public GrpcInvoker(Class<T> type, URL url, Invoker<T> target, ReferenceCountManagedChannel channel) {
         super(type, url);

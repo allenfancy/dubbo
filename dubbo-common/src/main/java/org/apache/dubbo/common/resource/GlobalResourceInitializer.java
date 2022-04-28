@@ -22,15 +22,22 @@ import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 /**
- * A initializer to release resource automatically on dubbo shutdown
+ * A initializer to release resource automatically on dubbo shutdown。
+ * 在dubbo关闭时自动释放资源的初始化器
+ *
+ * @author allen.wu
  */
 public class GlobalResourceInitializer<T> extends CallableSafeInitializer<T> {
 
     /**
      * The Dispose action to be executed on shutdown.
+     * 在关机时执行的Dispose操作。
      */
     private Consumer<T> disposeAction;
 
+    /**
+     * Dispose
+     */
     private Disposable disposable;
 
     public GlobalResourceInitializer(Callable<T> initializer) {
@@ -50,7 +57,7 @@ public class GlobalResourceInitializer<T> extends CallableSafeInitializer<T> {
     @Override
     protected T initialize() {
         T value = super.initialize();
-        // register disposable to release automatically
+        // 1. register disposable to release automatically
         if (this.disposable != null) {
             GlobalResourcesRepository.getInstance().registerDisposable(this.disposable);
         } else {
@@ -59,7 +66,18 @@ public class GlobalResourceInitializer<T> extends CallableSafeInitializer<T> {
         return value;
     }
 
+    /**
+     * 销毁处理器
+     *
+     * @param <T>
+     */
     public interface DestroyHandler<T> {
+
+        /**
+         * Destroy the resource
+         *
+         * @param initializer initializer
+         */
         void dispose(GlobalResourceInitializer<T> initializer);
     }
 }

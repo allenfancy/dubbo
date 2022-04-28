@@ -18,6 +18,8 @@ package org.apache.dubbo.common.extension;
 
 /**
  * Uniform accessor for extension
+ *
+ * @author allen.wu
  */
 public interface ExtensionAccessor {
 

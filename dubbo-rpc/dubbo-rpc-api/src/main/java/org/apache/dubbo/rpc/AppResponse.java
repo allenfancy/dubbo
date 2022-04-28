@@ -43,20 +43,35 @@ import static org.apache.dubbo.rpc.Constants.INVOCATION_KEY;
  * </pre>
  * AsyncRpcResult is a future representing an unfinished RPC call, while AppResponse is the actual return type of this call.
  * In theory, AppResponse doesn't have to implement the {@link Result} interface, this is done mainly for compatibility purpose.
+ * <p>
+ * 服务端返回的具体响应
  *
+ * @author allen.wu
  * @serial Do not change the class name and properties.
  */
 public class AppResponse implements Result {
 
     private static final long serialVersionUID = -6925924956850004727L;
 
+    /**
+     * 响应结果，也就是服务端返回的结果值
+     */
     private Object result;
 
+    /**
+     * 服务端返回的异常信息。
+     */
     private Throwable exception;
 
+    /**
+     * 附加信息
+     */
     private Map<String, Object> attachments = new HashMap<>();
 
-    private Map<String, Object> attributes = new HashMap<>();
+    /**
+     * 属性信息
+     */
+    private final Map<String, Object> attributes = new HashMap<>();
 
     public AppResponse() {
     }
@@ -131,6 +146,7 @@ public class AppResponse implements Result {
      *
      * @param map contains all key-value pairs to append
      */
+    @Override
     public void setAttachments(Map<String, String> map) {
         this.attachments = map == null ? new HashMap<>() : new HashMap<>(map);
     }
@@ -140,6 +156,7 @@ public class AppResponse implements Result {
         this.attachments = map == null ? new HashMap<>() : map;
     }
 
+    @Override
     public void addAttachments(Map<String, String> map) {
         if (map == null) {
             return;

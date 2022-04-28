@@ -20,6 +20,11 @@ package com.alibaba.dubbo.remoting;
 import org.apache.dubbo.remoting.Channel;
 import org.apache.dubbo.remoting.RemotingException;
 
+/**
+ * ChannelHandler
+ *
+ * @author allen.wu
+ */
 @Deprecated
 public interface ChannelHandler extends org.apache.dubbo.remoting.ChannelHandler {
 

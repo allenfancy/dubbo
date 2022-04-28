@@ -23,15 +23,23 @@ import org.apache.dubbo.common.Resetable;
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Client%E2%80%93server_model">Client/Server</a>
  *
+ * @author allen.wu
  * @see org.apache.dubbo.remoting.Transporter#connect(org.apache.dubbo.common.URL, ChannelHandler)
  */
 public interface Client extends Endpoint, Channel, Resetable, IdleSensible {
 
     /**
      * reconnect.
+     *
+     * @throws RemotingException if any error
      */
     void reconnect() throws RemotingException;
 
+    /**
+     * reset
+     *
+     * @param parameters parameters
+     */
     @Deprecated
     void reset(org.apache.dubbo.common.Parameters parameters);
 

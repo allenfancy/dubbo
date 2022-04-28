@@ -28,7 +28,14 @@ import java.util.Objects;
 
 import static org.apache.dubbo.common.constants.CommonConstants.SCOPE_MODEL;
 
+/**
+ * URL Builder
+ *
+ * @author allen.wu
+ */
 public final class URLBuilder extends ServiceConfigURL {
+
+
     private String protocol;
 
     private String username;
@@ -123,14 +130,14 @@ public final class URLBuilder extends ServiceConfigURL {
         Map<String, String> parameters = new HashMap<>(url.getParameters());
         Map<String, Object> attributes = new HashMap<>(url.getAttributes());
         return new URLBuilder(
-            protocol,
-            username,
-            password,
-            host,
-            port,
-            path,
-            parameters,
-            attributes);
+                protocol,
+                username,
+                password,
+                host,
+                port,
+                path,
+                parameters,
+                attributes);
     }
 
     public ServiceConfigURL build() {

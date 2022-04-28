@@ -75,19 +75,35 @@ public class Response {
 
     /**
      * server side threadpool exhausted and quick return.
+     * 服务端线程池耗尽并快速返回
      */
     public static final byte SERVER_THREADPOOL_EXHAUSTED_ERROR = 100;
 
+    /**
+     * 响应ID，与相应请求的ID一致
+     */
     private long mId = 0;
 
+    /**
+     * 版本
+     */
     private String mVersion;
 
+    /**
+     * 响应状态码，有OK、CLIENT_TIMEOUT、SERVER_TIMEOUT等10多个可选值
+     */
     private byte mStatus = OK;
 
     private boolean mEvent = false;
 
+    /**
+     * 可读的错误响应消息
+     */
     private String mErrorMsg;
 
+    /**
+     * 响应体
+     */
     private Object mResult;
 
     public Response() {

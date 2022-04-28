@@ -25,36 +25,45 @@ import static org.apache.dubbo.rpc.Constants.PROXY_KEY;
 
 /**
  * ProxyFactory. (API/SPI, Singleton, ThreadSafe)
+ * 作为创建代理对象的工厂。ProxyFactory 接口是一个扩展接口，
+ * getProxy() 方法为 Invoker 创建代理对象，
+ * getInvoker() 方法将代理对象反向封装成 Invoker 对象
+ *
+ * @author allen.wu
  */
 @SPI(value = "javassist", scope = FRAMEWORK)
 public interface ProxyFactory {
 
     /**
      * create proxy.
-     *
-     * @param invoker
-     * @return proxy
+     * 为传入的Invoker对象创建代理对象
+     * @param invoker invoker
+     * @return proxy proxy
+     * @throws RpcException rpc exception
      */
     @Adaptive({PROXY_KEY})
     <T> T getProxy(Invoker<T> invoker) throws RpcException;
 
     /**
      * create proxy.
-     *
-     * @param invoker
+     * 为传入的Invoker对象创建代理对象
+     * @param invoker invoker
+     * @param generic if generic
      * @return proxy
+     * @throws RpcException rpc exception
      */
     @Adaptive({PROXY_KEY})
     <T> T getProxy(Invoker<T> invoker, boolean generic) throws RpcException;
 
     /**
      * create invoker.
-     *
-     * @param <T>
-     * @param proxy
-     * @param type
-     * @param url
+     * 将传入的代理对象封装成Invoker对象，可以暂时理解为getProxy()的逆操作
+     * @param <T>   <T>
+     * @param proxy proxy
+     * @param type  type
+     * @param url   url
      * @return invoker
+     * @throws RpcException rpc exception
      */
     @Adaptive({PROXY_KEY})
     <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) throws RpcException;

@@ -45,6 +45,9 @@ import java.io.InputStream;
 
 /**
  * ExchangeCodec.
+ * dubbo 协议消息头的解析
+ *
+ * @author allen.wu
  */
 public class ExchangeCodec extends TelnetCodec {
 
@@ -298,10 +301,10 @@ public class ExchangeCodec extends TelnetCodec {
 
             // encode response data or error message.
             if (status == Response.OK) {
-                if(res.isHeartbeat()){
+                if (res.isHeartbeat()) {
                     // heartbeat response data is always null
                     bos.write(CodecSupport.getNullBytesOf(serialization));
-                }else {
+                } else {
                     ObjectOutput out = serialization.serialize(channel.getUrl(), bos);
                     if (res.isEvent()) {
                         encodeEventData(channel, out, res.getResult());
@@ -380,6 +383,13 @@ public class ExchangeCodec extends TelnetCodec {
         return decodeRequestData(in);
     }
 
+    /**
+     * 解码请求消息
+     *
+     * @param in in
+     * @return object
+     * @throws IOException io exception
+     */
     protected Object decodeRequestData(ObjectInput in) throws IOException {
         try {
             return in.readObject();
@@ -388,6 +398,13 @@ public class ExchangeCodec extends TelnetCodec {
         }
     }
 
+    /**
+     * 解码响应体
+     *
+     * @param in in
+     * @return response
+     * @throws IOException io exception
+     */
     protected Object decodeResponseData(ObjectInput in) throws IOException {
         try {
             return in.readObject();

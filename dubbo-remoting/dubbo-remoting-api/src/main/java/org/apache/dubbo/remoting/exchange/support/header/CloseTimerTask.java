@@ -23,11 +23,17 @@ import org.apache.dubbo.remoting.Channel;
 
 /**
  * CloseTimerTask
+ * 关闭timer task.
+ *
+ * @author qian.lei
  */
 public class CloseTimerTask extends AbstractTimerTask {
 
     private static final Logger logger = LoggerFactory.getLogger(CloseTimerTask.class);
 
+    /**
+     * 空闲时间
+     */
     private final int idleTimeout;
 
     public CloseTimerTask(ChannelProvider channelProvider, Long heartbeatTimeoutTick, int idleTimeout) {

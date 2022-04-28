@@ -41,25 +41,44 @@ import static org.apache.dubbo.registry.Constants.REGISTRY_RETRY_PERIOD_KEY;
 
 /**
  * FailbackRegistry. (SPI, Prototype, ThreadSafe)
+ * 重试机制实现；底层使用HashedWheelTimer实现，每隔一段时间就会执行一次，检查是否有任务需要执行；
+ * 具体的实现组件如ZK，ETCD等开源服务发现组件的Registry实现.
+ * @author william.liangf
  */
 public abstract class FailbackRegistry extends AbstractRegistry {
 
     /*  retry task map */
 
+    /**
+     * 注册失败
+     */
     private final ConcurrentMap<URL, FailedRegisteredTask> failedRegistered = new ConcurrentHashMap<URL, FailedRegisteredTask>();
 
+    /**
+     * 取消注册失败
+     */
     private final ConcurrentMap<URL, FailedUnregisteredTask> failedUnregistered = new ConcurrentHashMap<URL, FailedUnregisteredTask>();
 
+    /**
+     * 订阅失败
+     */
     private final ConcurrentMap<Holder, FailedSubscribedTask> failedSubscribed = new ConcurrentHashMap<Holder, FailedSubscribedTask>();
 
+    /**
+     * 取消订阅失败
+     */
     private final ConcurrentMap<Holder, FailedUnsubscribedTask> failedUnsubscribed = new ConcurrentHashMap<Holder, FailedUnsubscribedTask>();
 
     /**
      * The time in milliseconds the retryExecutor will wait
+     * 重试操作的时间间隔
      */
     private final int retryPeriod;
 
-    // Timer for failure retry, regular check if there is a request for failure, and if there is, an unlimited retry
+    /**
+     * Timer for failure retry, regular check if there is a request for failure, and if there is, an unlimited retry
+     * 用于执行失败重试的定时器，每隔一段时间就会执行一次，检查是否有任务需要执行；
+     */
     private final HashedWheelTimer retryTimer;
 
     public FailbackRegistry(URL url) {
